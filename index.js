@@ -1,10 +1,12 @@
 import express from "express";
 import "dotenv/config";
 import mongoose from "mongoose";
+import cors from "cors";
 
 import userRouter from "./src/routes/user.js";
 
 const app = express();
+app.use(cors());
 app.use(express.json());
 
 mongoose
@@ -16,8 +18,10 @@ mongoose
 
 app.use(userRouter);
 
-app.get("/", (req, res) => {
-  res.send("Hello World");
+app.use((re, res) => {
+  return res
+    .status(404)
+    .send({ messag: "Sorry, this endpoint does not exist" });
 });
 
 app.listen(process.env.PORT, () => {

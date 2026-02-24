@@ -2,6 +2,8 @@ import express from "express";
 
 import { SIGN_UP, LOGIN, VALIDATE_LOGIN } from "../controllers/user.js";
 
+// import authUser from "../middlewares/auth.js";
+
 const router = express.Router();
 
 router.post("/register", SIGN_UP);
