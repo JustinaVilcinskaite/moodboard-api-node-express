@@ -4,6 +4,7 @@ import mongoose from "mongoose";
 import cors from "cors";
 
 import userRouter from "./src/routes/user.js";
+import boardRouter from "./src/routes/board.js";
 
 const app = express();
 app.use(cors());
@@ -17,6 +18,7 @@ mongoose
   });
 
 app.use(userRouter);
+app.use(boardRouter);
 
 app.use((re, res) => {
   return res

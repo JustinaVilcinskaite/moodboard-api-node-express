@@ -1,4 +1,4 @@
-import { v4 as uuidv4 } from "uuid";
+// import { v4 as uuidv4 } from "uuid";
 import UserModel from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -11,11 +11,30 @@ const SIGN_UP = async (req, res) => {
       return res.status(409).json({ message: "Email already registered" });
     }
 
-    const salt = bcrypt.genSaltSync(10);
-    const hash = bcrypt.hashSync(req.body.password, salt);
+    // Synchronous bcrypt version (blocks event loop)
+
+    // const salt = bcrypt.genSaltSync(10);
+    // const hash = bcrypt.hashSync(req.body.password, salt);
+
+    // const user = new UserModel({
+    //   id: uuidv4(),
+    //   name: req.body.name,
+    //   email: req.body.email,
+    //   password: hash,
+    // });
+
+    // await user.save();
+
+    // Async version with manual salt 
+
+    // const salt = await bcrypt.genSalt(10);
+    // const hash = await bcrypt.hash(req.body.password, salt);
+
+    // Async hash with internal salt generation (non-blocking)
+
+    const hash = await bcrypt.hash(req.body.password, 10);
 
     const user = new UserModel({
-      id: uuidv4(),
       name: req.body.name,
       email: req.body.email,
       password: hash,
@@ -23,11 +42,12 @@ const SIGN_UP = async (req, res) => {
 
     await user.save();
 
-    return res
-      .status(201)
-      .json({ user: user, message: "User registered successfully." });
-  } catch (err) {
-    console.log(err);
+    return res.status(201).json({
+      user: { id: user.id, name: user.name, email: user.email },
+      message: "User registered successfully.",
+    });
+  } catch (error) {
+    console.error("SIGN_UP error:", error);
     return res.status(500).json({ message: "Error in application" });
   }
 };
@@ -61,13 +81,13 @@ const LOGIN = async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: "24h" },
     );
-
     return res.status(200).json({
-      token: token,
-      message: "Login was successfull",
+      token,
+      user: { id: user.id, name: user.name, email: user.email },
+      message: "Login was successful",
     });
-  } catch (err) {
-    console.log(err);
+  } catch (error) {
+    console.error("LOGIN error:", error);
     return res.status(500).json({ message: "Error in application" });
   }
 };
