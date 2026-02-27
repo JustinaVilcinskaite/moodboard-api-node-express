@@ -19,6 +19,7 @@ const router = express.Router();
 router.get("/boards", authUser, GET_MY_BOARDS);
 router.post("/boards", authUser, CREATE_BOARD);
 router.get("/boards/:id", authUser, GET_BOARD_BY_ID);
+// maybe change to pacth
 router.put("/boards/:id", authUser, UPDATE_BOARD_BY_ID);
 router.delete("/boards/:id", authUser, DELETE_BOARD_BY_ID);
 
