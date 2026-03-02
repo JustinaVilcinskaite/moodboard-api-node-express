@@ -1,0 +1,173 @@
+import BoardModel from "../models/board.js";
+import FolderModel from "../models/folder.js";
+
+const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
+  try {
+    const { boardId } = req.params;
+
+    const board = await BoardModel.findOne({
+      id: boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    const folders = await FolderModel.find({ boardId: boardId }).sort({
+      order: 1,
+    });
+
+    return req.status(200).json({ folders });
+  } catch (error) {
+    console.error("GET_FOLDERS_BY_BOARD_ID error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
+  try {
+    const { boardId } = req.params;
+
+    const board = await BoardModel.findOne({
+      id: boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    const lastFolder = await FolderModel.findOne({ boardId: boardId }).sort({
+      order: -1,
+    });
+
+    const newOrder = lastFolder ? lastFolder.order + 1 : 0;
+
+    const folder = new FolderModel({
+      boardId: boardId,
+      title: req.body.title,
+      order: newOrder,
+      isDefault: false,
+    });
+
+    await folder.save();
+
+    return res.status(201).json({ message: "Folder has been added", folder });
+  } catch (error) {
+    console.error("CREATE_FOLDER_FOR_BOARD error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+const UPDATE_FOLDER_BY_ID = async (req, res) => {
+  try {
+    const { folderId } = req.params;
+
+    const allowedUpdates = ["title"];
+    const updates = {};
+
+    for (const key of allowedUpdates) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    const folder = await FolderModel.findOne({ id: folderId });
+
+    if (!folder) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    const board = await BoardModel.findOne({
+      id: folder.boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    const updatedFolder = await FolderModel.findOneAndUpdate(
+      { id: folderId },
+      { $set: updates },
+      { new: true, runValidators: true },
+    );
+
+    return res.status(200).json({
+      message: "Folder has been updated",
+      folder: updatedFolder,
+    });
+  } catch (error) {
+    console.error("UPDATE_FOLDER_BY_ID error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+const DELETE_FOLDER_BY_ID = async (req, res) => {
+  try {
+    const { folderId } = req.params;
+
+    const folder = await BoardModel.findOne({
+      id: folderId,
+    });
+
+    if (!folder) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    if (folder.isDefault) {
+      return res
+        .status(400)
+        .json({ message: "Default folder cannot be deleted" });
+    }
+
+    const board = await BoardModel.findOne({
+      id: folder.boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    // TODO: Later move images to default folder
+
+    await FolderModel.deleteOne({ id: folderId });
+
+    return res.status(200).json({
+      message: "Folder has been deleted",
+      folder,
+    });
+  } catch (error) {
+    console.error("DELETE_FOLDER_BY_ID error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+const GET_PUBLIC_FOLDERS_BY_BOARD_ID = async (req, res) => {
+  try {
+    const { boardId } = req.params;
+
+    const board = await BoardModel.findOne({
+      id: boardId,
+      isPublic: true,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    const folders = await FolderModel.find({ boardId: boardId }).sort({
+      order: 1,
+    });
+
+    return req.status(200).json({ folders });
+  } catch (error) {
+    console.error("GET_PUBLIC_FOLDERS_BY_BOARD_ID error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export {
+  GET_FOLDERS_BY_BOARD_ID,
+  CREATE_FOLDER_FOR_BOARD,
+  UPDATE_FOLDER_BY_ID,
+  DELETE_FOLDER_BY_ID,
+  GET_PUBLIC_FOLDERS_BY_BOARD_ID,
+};

@@ -1,5 +1,6 @@
 import { v4 as uuidv4 } from "uuid";
 import BoardModel from "../models/board.js";
+import FolderModel from "../models/board.js";
 
 const GET_MY_BOARDS = async (req, res) => {
   try {
@@ -13,37 +14,91 @@ const GET_MY_BOARDS = async (req, res) => {
   } catch (error) {
     console.error("GET_MY_BOARDS error:", error);
     return res.status(500).json({
-      message: "Error in application",
+      message: "Server error",
     });
   }
 };
 
-const CREATE_BOARD = async (req, res) => {
-  try {
-    const board = new BoardModel({
-      title: req.body.title,
-      description: req.body.description,
-      ownerId: req.userId,
-      // ?
-      isPublic: req.body.isPublic ?? false,
-      defaultFolderId: uuidv4(),
-    });
 
-    await board.save();
 
-    return res.status(201).json({ message: "Board has been added", board });
-  } catch (error) {
-    console.error("CREATE_BOARD error:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
+// FIX: test CREATE_BOARD, it's not wroking
+// const CREATE_BOARD = async (req, res) => {
+//   try {
+//     const boardId = uuidv4();
+//     const defaultFolderId = uuidv4();
+
+//     // 1) Create default folder FIRST
+//     const defaultFolder = new FolderModel({
+//       id: defaultFolderId,
+//       boardId: boardId,
+//       title: "General",
+//       order: 0,
+//       isDefault: true,
+//     });
+
+//     await defaultFolder.save();
+
+//     // 2) Create board SECOND (now we can safely reference defaultFolderId)
+//     const board = new BoardModel({
+//       id: boardId,
+//       title: req.body.title,
+//       description: req.body.description,
+//       ownerId: req.userId,
+//       // ?
+//       isPublic: req.body.isPublic ?? false,
+//       defaultFolderId: defaultFolderId,
+//     });
+
+//     await board.save();
+
+//     // Save both; if board save fails after folder save, delete the folder
+//     // TODO: add boardId when addding more folders
+//     // try {
+//     //   await defaultFolder.save();
+//     //   await board.save();
+//     // } catch (err) {
+//     //   await FolderModel.deleteOne({ id: defaultFolderId }).catch(() => {});
+//     //   throw err;
+//     // }
+
+//     return res
+//       .status(201)
+//       .json({ message: "Board has been added", defaultFolder });
+//   } catch (error) {
+//     console.error("CREATE_BOARD error:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
+
+// const CREATE_BOARD = async (req, res) => {
+//   try {
+//     const board = new BoardModel({
+//       title: req.body.title,
+//       description: req.body.description,
+//       ownerId: req.userId,
+//       // ?
+//       isPublic: req.body.isPublic ?? false,
+//       defaultFolderId: uuidv4(),
+//     });
+
+//     await board.save();
+
+//     return res.status(201).json({ message: "Board has been added", board });
+//   } catch (error) {
+//     console.error("CREATE_BOARD error:", error);
+//     return res.status(500).json({ message: "Server error" });
+//   }
+// };
 
 const GET_BOARD_BY_ID = async (req, res) => {
   try {
-    // const id = req.params.id;
-    const { id } = req.params;
+    // const boardId = req.params.id;
+    const { boardId } = req.params;
 
-    const board = await BoardModel.findOne({ id, ownerId: req.userId });
+    const board = await BoardModel.findOne({
+      id: boardId,
+      ownerId: req.userId,
+    });
 
     if (!board) {
       return res.status(404).json({ message: "Board not found" });
@@ -63,7 +118,7 @@ const GET_BOARD_BY_ID = async (req, res) => {
 
 const UPDATE_BOARD_BY_ID = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { boardId } = req.params;
 
     // List of fields that are allowed to be updated
     // This prevents updating protected fields like ownerId, defaultFolderId, etc.
@@ -107,7 +162,7 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
     //  - runValidators: true enforces schema validation rules
 
     const updatedBoard = await BoardModel.findOneAndUpdate(
-      { id, ownerId: req.userId },
+      { id: boardId, ownerId: req.userId },
       { $set: updates },
       { new: true, runValidators: true },
     );
@@ -133,7 +188,7 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
 
 // const UPDATE_BOARD_BY_ID = async (req, res) => {
 //   try {
-//     const { id } = req.params;
+//     const { boardId} = req.params;
 
 // // Only updating editable fields explicitly (prevents updating ownerId etc.)
 
@@ -141,7 +196,7 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
 // // Prevents accidental update of protected fields
 
 //     const updatedBoard = await BoardModel.findOneAndUpdate(
-//       { id, ownerId: req.userId },
+//       { id: boardId, ownerId: req.userId },
 //       {
 //         title: req.body.title,
 //         description: req.body.description,
@@ -173,9 +228,9 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
 
 // const UPDATE_BOARD_BY_ID = async (req, res) => {
 //   try {
-//     const id = req.params.id;
+//     const boardId = req.params.boardId
 
-//     const board = await BoardModel.findOne({ id: id });
+//     const board = await BoardModel.findOne({ id: boardId });
 
 //     if (!board) {
 //       return res.status(404).json({ message: "Board not found" });
@@ -189,7 +244,7 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
 
 // //  Spreading req.body may allow updating protected fields
 //     const updatedBoard = await BoardModel.findOneAndUpdate(
-//       { id: id },
+//       { id: boardId },
 //       { ...req.body },
 //       { new: true },
 //     );
@@ -206,16 +261,20 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
 
 const DELETE_BOARD_BY_ID = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { boardId } = req.params;
 
     const board = await BoardModel.findOneAndDelete({
-      id,
+      id: boardId,
       ownerId: req.userId,
     });
 
     if (!board) {
       return res.status(404).json({ message: "Board not found" });
     }
+
+    await FolderModel.deleteMany({ boardId: boardId });
+
+    // TODO: Later Delete images too
 
     return res.status(200).json({
       message: "Board was deleted",
@@ -244,9 +303,9 @@ const GET_ALL_PUBLIC_BOARDS = async (req, res) => {
 
 const GET_PUBLIC_BOARD_BY_ID = async (req, res) => {
   try {
-    const { id } = req.params;
+    const { boardId } = req.params;
 
-    const board = await BoardModel.findOne({ id, isPublic: true });
+    const board = await BoardModel.findOne({ id: boardId, isPublic: true });
 
     if (!board) {
       return res.status(404).json({ board });

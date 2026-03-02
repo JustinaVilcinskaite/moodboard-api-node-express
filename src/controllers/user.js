@@ -1,4 +1,3 @@
-// import { v4 as uuidv4 } from "uuid";
 import UserModel from "../models/user.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
@@ -25,7 +24,7 @@ const SIGN_UP = async (req, res) => {
 
     // await user.save();
 
-    // Async version with manual salt 
+    // Async version with manual salt
 
     // const salt = await bcrypt.genSalt(10);
     // const hash = await bcrypt.hash(req.body.password, salt);
@@ -48,7 +47,7 @@ const SIGN_UP = async (req, res) => {
     });
   } catch (error) {
     console.error("SIGN_UP error:", error);
-    return res.status(500).json({ message: "Error in application" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -88,10 +87,11 @@ const LOGIN = async (req, res) => {
     });
   } catch (error) {
     console.error("LOGIN error:", error);
-    return res.status(500).json({ message: "Error in application" });
+    return res.status(500).json({ message: "Server error" });
   }
 };
 
+// TODO: later VALIDATE_LOGIN
 const VALIDATE_LOGIN = (req, res) => {};
 
 export { SIGN_UP, LOGIN, VALIDATE_LOGIN };
