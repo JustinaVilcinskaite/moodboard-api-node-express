@@ -1,5 +1,5 @@
 import express from "express";
-// import authUser from "../middlewares/auth.js";
+import authUser from "../middlewares/auth.js";
 
 import { SIGN_UP, LOGIN, VALIDATE_LOGIN } from "../controllers/user.js";
 
@@ -7,10 +7,9 @@ import { SIGN_UP, LOGIN, VALIDATE_LOGIN } from "../controllers/user.js";
 
 const router = express.Router();
 
-router.post("/register", SIGN_UP);
-router.post("/login", LOGIN);
+router.post("/auth/register", SIGN_UP);
+router.post("/auth/login", LOGIN);
 
-// TODO: add auth
-router.get("/login/validate", VALIDATE_LOGIN);
+router.get("/auth/me", authUser, VALIDATE_LOGIN);
 
 export default router;

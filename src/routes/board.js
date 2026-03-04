@@ -13,7 +13,10 @@ import {
 
 const router = express.Router();
 
+
 // TODO: data validation
+// TOD0: Later refactor public and auth enpoints into one
+
 
 router.get("/boards", authUser, GET_MY_BOARDS);
 router.post("/boards", authUser, CREATE_BOARD);

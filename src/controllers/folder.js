@@ -18,7 +18,7 @@ const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
       order: 1,
     });
 
-    return req.status(200).json({ folders });
+    return res.status(200).json({ folders });
   } catch (error) {
     console.error("GET_FOLDERS_BY_BOARD_ID error:", error);
     return res.status(500).json({ message: "Server error" });
@@ -37,11 +37,13 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
       return res.status(404).json({ message: "Board not found" });
     }
 
+
     const lastFolder = await FolderModel.findOne({ boardId: boardId }).sort({
       order: -1,
     });
 
     const newOrder = lastFolder ? lastFolder.order + 1 : 0;
+
 
     const folder = new FolderModel({
       boardId: boardId,
@@ -99,16 +101,14 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 const DELETE_FOLDER_BY_ID = async (req, res) => {
   try {
     const { folderId } = req.params;
 
-    const folder = await BoardModel.findOne({
-      id: folderId,
-    });
-
+    const folder = await FolderModel.findOne({ id: folderId });
     if (!folder) {
-      return res.status(404).json({ message: "Board not found" });
+      return res.status(404).json({ message: "Folder not found" });
     }
 
     if (folder.isDefault) {
@@ -123,7 +123,8 @@ const DELETE_FOLDER_BY_ID = async (req, res) => {
     });
 
     if (!board) {
-      return res.status(404).json({ message: "Folder not found" });
+      return res.status(404).json({ message: "Board not found" });
+      // or: return res.status(403).json({ message: "Forbidden" });
     }
 
     // TODO: Later move images to default folder
@@ -155,9 +156,9 @@ const GET_PUBLIC_FOLDERS_BY_BOARD_ID = async (req, res) => {
 
     const folders = await FolderModel.find({ boardId: boardId }).sort({
       order: 1,
-    });
+    });3
 
-    return req.status(200).json({ folders });
+    return res.status(200).json({ folders });
   } catch (error) {
     console.error("GET_PUBLIC_FOLDERS_BY_BOARD_ID error:", error);
     return res.status(500).json({ message: "Server error" });

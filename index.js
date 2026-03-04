@@ -25,7 +25,7 @@ app.use(folderRouter);
 app.use((re, res) => {
   return res
     .status(404)
-    .send({ messag: "Sorry, this endpoint does not exist" });
+    .send({ message: "Sorry, this endpoint does not exist" });
 });
 
 app.listen(process.env.PORT, () => {

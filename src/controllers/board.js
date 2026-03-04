@@ -1,12 +1,14 @@
 import { v4 as uuidv4 } from "uuid";
 import BoardModel from "../models/board.js";
-import FolderModel from "../models/board.js";
+import FolderModel from "../models/folder.js";
 
 const GET_MY_BOARDS = async (req, res) => {
   try {
     const boards = await BoardModel.find({ ownerId: req.userId }).sort({
       createdAt: -1,
     });
+
+    // TODO: no boards yet if the user has no boards
 
     return res.status(200).json({
       boards,
@@ -19,76 +21,49 @@ const GET_MY_BOARDS = async (req, res) => {
   }
 };
 
+const CREATE_BOARD = async (req, res) => {
+  try {
+    const boardId = uuidv4();
+    const defaultFolderId = uuidv4();
 
+    // 1) Create default folder FIRST
+    const defaultFolder = new FolderModel({
+      id: defaultFolderId,
+      boardId: boardId,
+      title: "General",
+      order: 0,
+      isDefault: true,
+    });
 
-// FIX: test CREATE_BOARD, it's not wroking
-// const CREATE_BOARD = async (req, res) => {
-//   try {
-//     const boardId = uuidv4();
-//     const defaultFolderId = uuidv4();
+    // 2) Create board SECOND (now we can safely reference defaultFolderId)
+    const board = new BoardModel({
+      id: boardId,
+      title: req.body.title,
+      description: req.body.description,
+      ownerId: req.userId,
+      // ?
+      isPublic: req.body.isPublic ?? false,
+      defaultFolderId: defaultFolderId,
+    });
 
-//     // 1) Create default folder FIRST
-//     const defaultFolder = new FolderModel({
-//       id: defaultFolderId,
-//       boardId: boardId,
-//       title: "General",
-//       order: 0,
-//       isDefault: true,
-//     });
+    // Save both; if board save fails after folder save, delete the folder
+    // TODO: add boardId when addding more folders
+    try {
+      await defaultFolder.save();
+      await board.save();
+    } catch (err) {
+      await FolderModel.deleteOne({ id: defaultFolderId }).catch(() => {});
+      throw err;
+    }
 
-//     await defaultFolder.save();
-
-//     // 2) Create board SECOND (now we can safely reference defaultFolderId)
-//     const board = new BoardModel({
-//       id: boardId,
-//       title: req.body.title,
-//       description: req.body.description,
-//       ownerId: req.userId,
-//       // ?
-//       isPublic: req.body.isPublic ?? false,
-//       defaultFolderId: defaultFolderId,
-//     });
-
-//     await board.save();
-
-//     // Save both; if board save fails after folder save, delete the folder
-//     // TODO: add boardId when addding more folders
-//     // try {
-//     //   await defaultFolder.save();
-//     //   await board.save();
-//     // } catch (err) {
-//     //   await FolderModel.deleteOne({ id: defaultFolderId }).catch(() => {});
-//     //   throw err;
-//     // }
-
-//     return res
-//       .status(201)
-//       .json({ message: "Board has been added", defaultFolder });
-//   } catch (error) {
-//     console.error("CREATE_BOARD error:", error);
-//     return res.status(500).json({ message: "Server error" });
-//   }
-// };
-
-// const CREATE_BOARD = async (req, res) => {
-//   try {
-//     const board = new BoardModel({
-//       title: req.body.title,
-//       description: req.body.description,
-//       ownerId: req.userId,
-//       // ?
-//       isPublic: req.body.isPublic ?? false,
-//       defaultFolderId: uuidv4(),
-//     });
-
-//     await board.save();
-
-//     return res.status(201).json({ message: "Board has been added", board });
-//   } catch (error) {
-//     console.error("CREATE_BOARD error:", error);
-//     return res.status(500).json({ message: "Server error" });
-//   }
-// };
+    return res
+      .status(201)
+      .json({ message: "Board has been added", board, defaultFolder });
+  } catch (error) {
+    console.error("CREATE_BOARD error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
 
 const GET_BOARD_BY_ID = async (req, res) => {
   try {
@@ -99,6 +74,8 @@ const GET_BOARD_BY_ID = async (req, res) => {
       id: boardId,
       ownerId: req.userId,
     });
+
+    // FIX: if does not belong to user auth but not board not found
 
     if (!board) {
       return res.status(404).json({ message: "Board not found" });

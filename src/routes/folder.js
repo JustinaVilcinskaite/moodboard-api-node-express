@@ -12,6 +12,7 @@ import {
 const router = express.Router();
 
 // TODO: data validation
+// TOD0: Later refactor public and auth enpoints into one
 
 router.get("/boards/:boardId/folders", authUser, GET_FOLDERS_BY_BOARD_ID);
 router.post("/boards/:boardId/folders", authUser, CREATE_FOLDER_FOR_BOARD);
