@@ -9,7 +9,7 @@ const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
       id: boardId,
       ownerId: req.userId,
     });
-
+ 
     if (!board) {
       return res.status(404).json({ message: "Board not found" });
     }

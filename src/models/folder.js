@@ -6,9 +6,9 @@ import { v4 as uuidv4 } from "uuid";
 
 const folderSchema = mongoose.Schema(
   {
-    id: { type: String, default: () => uuidv4(), unique: true },
+    id: { type: String, default: uuidv4, unique: true, index: true },
     boardId: { type: String, required: true, index: true },
-    title: { type: String, required: true },
+    title: { type: String, required: true, trim: true },
     order: { type: Number, required: true },
     isDefault: { type: Boolean, default: false },
   },

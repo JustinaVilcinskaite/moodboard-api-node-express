@@ -6,6 +6,7 @@ import cors from "cors";
 import userRouter from "./src/routes/user.js";
 import boardRouter from "./src/routes/board.js";
 import folderRouter from "./src/routes/folder.js";
+import imageRouter from "./src/routes/image.js";
 
 const app = express();
 app.use(cors());
@@ -21,6 +22,7 @@ mongoose
 app.use(userRouter);
 app.use(boardRouter);
 app.use(folderRouter);
+app.use(imageRouter);
 
 app.use((re, res) => {
   return res

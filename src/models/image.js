@@ -5,14 +5,18 @@ import { v4 as uuidv4 } from "uuid";
 
 const imageSchema = mongoose.Schema(
   {
-    id: { type: String, default: () => uuidv4(), unique: true },
+    id: { type: String, default: uuidv4, unique: true, index: true },
     boardId: { type: String, required: true, index: true },
     folderId: { type: String, required: true, index: true },
     // Phase 1: URL-based images
-    url: { type: String, required: true },
+    url: { type: String, required: true, trim: true },
     order: { type: Number, required: true },
-    note: { type: String, default: "" },
-    tags: { type: [String], default: [] },
+    note: { type: String, default: "", trim: true },
+    tags: {
+      type: [String],
+      default: [],
+      set: (value) => (Array.isArray(value) ? value : []),
+    },
 
     // Future feature
     // colors: { type: [String], default: [] },

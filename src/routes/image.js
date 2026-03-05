@@ -13,12 +13,9 @@ import {
 
 const router = express.Router();
 
-
 // TODO: data validation
 // TOD0: Later refactor public and auth enpoints into one
 
-
-// can support ?folderId=
 router.get("/boards/:boardId/images", authUser, GET_IMAGES_BY_BOARD);
 // Phase 1 - later do image upload
 router.post("/boards/:boardId/images", authUser, CREATE_IMAGE_BY_URL);
@@ -27,7 +24,6 @@ router.patch("/images/:imageId", authUser, UPDATE_IMAGE_BY_ID);
 router.delete("/images/:imageId", authUser, DELETE_IMAGE_BY_ID);
 
 // public routes
-// can support ?folderId=
 router.get("/public/boards/:boardId/images", GET_PUBLIC_IMAGES_BY_BOARD);
 router.get("/public/images/:imageId", GET_PUBLIC_IMAGE_BY_ID);
 
