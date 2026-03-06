@@ -1,5 +1,6 @@
 import BoardModel from "../models/board.js";
 import FolderModel from "../models/folder.js";
+import ImageModel from "../models/image.js";
 
 const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
   try {
@@ -9,12 +10,12 @@ const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
       id: boardId,
       ownerId: req.userId,
     });
- 
+
     if (!board) {
       return res.status(404).json({ message: "Board not found" });
     }
 
-    const folders = await FolderModel.find({ boardId: boardId }).sort({
+    const folders = await FolderModel.find({ boardId }).sort({
       order: 1,
     });
 
@@ -37,13 +38,11 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
       return res.status(404).json({ message: "Board not found" });
     }
 
-
     const lastFolder = await FolderModel.findOne({ boardId: boardId }).sort({
       order: -1,
     });
 
     const newOrder = lastFolder ? lastFolder.order + 1 : 0;
-
 
     const folder = new FolderModel({
       boardId: boardId,
@@ -71,6 +70,10 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
       if (req.body[key] !== undefined) updates[key] = req.body[key];
     }
 
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
     const folder = await FolderModel.findOne({ id: folderId });
 
     if (!folder) {
@@ -89,7 +92,7 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
     const updatedFolder = await FolderModel.findOneAndUpdate(
       { id: folderId },
       { $set: updates },
-      { new: true, runValidators: true },
+      { returnDocument: "after", runValidators: true },
     );
 
     return res.status(200).json({
@@ -102,6 +105,8 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
   }
 };
 
+// TODO: Later, when image reorder is implemented,
+// review whether moved images should receive new order values in the default folder.
 const DELETE_FOLDER_BY_ID = async (req, res) => {
   try {
     const { folderId } = req.params;
@@ -123,11 +128,12 @@ const DELETE_FOLDER_BY_ID = async (req, res) => {
     });
 
     if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-      // or: return res.status(403).json({ message: "Forbidden" });
+      return res.status(404).json({ message: "Folder not found" });
     }
-
-    // TODO: Later move images to default folder
+    await ImageModel.updateMany(
+      { folderId: folderId, boardId: board.id },
+      { $set: { folderId: board.defaultFolderId } },
+    );
 
     await FolderModel.deleteOne({ id: folderId });
 
@@ -156,7 +162,7 @@ const GET_PUBLIC_FOLDERS_BY_BOARD_ID = async (req, res) => {
 
     const folders = await FolderModel.find({ boardId: boardId }).sort({
       order: 1,
-    });3
+    });
 
     return res.status(200).json({ folders });
   } catch (error) {

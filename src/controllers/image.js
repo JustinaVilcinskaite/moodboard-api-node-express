@@ -17,6 +17,7 @@ const GET_IMAGES_BY_BOARD = async (req, res) => {
 
     const images = await ImageModel.find({ boardId }).sort({
       order: 1,
+
       createdAt: 1,
     });
 
@@ -37,7 +38,7 @@ const CREATE_IMAGE_BY_URL = async (req, res) => {
     const { url, folderId, note, tags } = req.body;
 
     if (!url) {
-      return res.status(400).json({ message: "Imgae url is required" });
+      return res.status(400).json({ message: "Image url is required" });
     }
 
     const board = await BoardModel.findOne({
@@ -118,6 +119,43 @@ const GET_IMAGE_BY_ID = async (req, res) => {
 
 const UPDATE_IMAGE_BY_ID = async (req, res) => {
   try {
+    const { imageId } = req.params;
+
+    const image = await ImageModel.findOne({ id: imageId });
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    const board = await BoardModel.findOne({
+      id: image.boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    const allowedUpdates = ["note", "tags"];
+    const updates = {};
+
+    for (const key of allowedUpdates) {
+      if (req.body[key] !== undefined) updates[key] = req.body[key];
+    }
+
+    if (Object.keys(updates).length === 0) {
+      return res.status(400).json({ message: "No valid fields to update" });
+    }
+
+    const updatedImage = await ImageModel.findOneAndUpdate(
+      { id: imageId },
+      { $set: updates },
+      { returnDocument: "after", runValidators: true },
+    );
+
+    return res
+      .status(200)
+      .json({ message: "Image updated successfully", image: updatedImage });
   } catch (error) {
     console.error("UPDATE_IMAGE_BY_ID error:", error);
 
@@ -127,10 +165,36 @@ const UPDATE_IMAGE_BY_ID = async (req, res) => {
   }
 };
 
+// TODO: Later, when image reorder/move is implemented,
+// review whether order values should be reindexed after delete.
+
 const DELETE_IMAGE_BY_ID = async (req, res) => {
   try {
+    const { imageId } = req.params;
+
+    const image = await ImageModel.findOne({ id: imageId });
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    const board = await BoardModel.findOne({
+      id: image.boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    await ImageModel.deleteOne({ id: imageId });
+
+    return res.status(200).json({
+      message: "Image deleted successfully",
+      image,
+    });
   } catch (error) {
-    console.error(error);
+    console.error("DELETE_IMAGE_BY_ID error:", error);
     return res.status(500).json({
       message: "Server error",
     });
@@ -139,8 +203,22 @@ const DELETE_IMAGE_BY_ID = async (req, res) => {
 
 const GET_PUBLIC_IMAGES_BY_BOARD = async (req, res) => {
   try {
+    const { boardId } = req.params;
+
+    const board = await BoardModel.findOne({ id: boardId, isPublic: true });
+
+    if (!board) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    const images = await ImageModel.find({ boardId }).sort({
+      order: 1,
+      createdAt: 1,
+    });
+
+    return res.status(200).json({ images });
   } catch (error) {
-    console.error(error);
+    console.error("GET_PUBLIC_IMAGES_BY_BOARD error:", error);
     return res.status(500).json({
       message: "Server error",
     });
@@ -149,8 +227,26 @@ const GET_PUBLIC_IMAGES_BY_BOARD = async (req, res) => {
 
 const GET_PUBLIC_IMAGE_BY_ID = async (req, res) => {
   try {
+    const { imageId } = req.params;
+
+    const image = await ImageModel.findOne({ id: imageId });
+
+    if (!image) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    const board = await BoardModel.findOne({
+      id: image.boardId,
+      isPublic: true,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    return res.status(200).json({ image });
   } catch (error) {
-    console.error(error);
+    console.error("GET_PUBLIC_IMAGE_BY_ID error:", error);
     return res.status(500).json({
       message: "Server error",
     });
