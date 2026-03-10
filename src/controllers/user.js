@@ -4,7 +4,9 @@ import jwt from "jsonwebtoken";
 
 const SIGN_UP = async (req, res) => {
   try {
-    const existingUser = await UserModel.findOne({ email: req.body.email });
+    const { name, email, password } = req.body;
+
+    const existingUser = await UserModel.findOne({ email });
 
     if (existingUser) {
       return res.status(409).json({ message: "Email already registered" });
@@ -16,9 +18,8 @@ const SIGN_UP = async (req, res) => {
     // const hash = bcrypt.hashSync(req.body.password, salt);
 
     // const user = new UserModel({
-    //   id: uuidv4(),
-    //   name: req.body.name,
-    //   email: req.body.email,
+    //   name,
+    //   email,
     //   password: hash,
     // });
 
@@ -27,15 +28,15 @@ const SIGN_UP = async (req, res) => {
     // Async version with manual salt
 
     // const salt = await bcrypt.genSalt(10);
-    // const hash = await bcrypt.hash(req.body.password, salt);
+    // const hash = await bcrypt.hash(password, salt);
 
     // Async hash with internal salt generation (non-blocking)
 
-    const hash = await bcrypt.hash(req.body.password, 10);
+    const hash = await bcrypt.hash(password, 10);
 
     const user = new UserModel({
-      name: req.body.name,
-      email: req.body.email,
+      name,
+      email,
       password: hash,
     });
 
@@ -53,7 +54,9 @@ const SIGN_UP = async (req, res) => {
 
 const LOGIN = async (req, res) => {
   try {
-    const user = await UserModel.findOne({ email: req.body.email });
+    const { email, password } = req.body;
+
+    const user = await UserModel.findOne({ email });
 
     if (!user) {
       return res.status(401).json({
@@ -61,7 +64,13 @@ const LOGIN = async (req, res) => {
       });
     }
 
-    const isPasswordMatch = bcrypt.compareSync(
+    // const isPasswordMatch = bcrypt.compareSync(
+    //   req.body.password,
+    //   user.password,
+    // );
+
+    // non-blocking
+    const isPasswordMatch = await bcrypt.compare(
       req.body.password,
       user.password,
     );

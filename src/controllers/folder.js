@@ -28,6 +28,7 @@ const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
 const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
   try {
     const { boardId } = req.params;
+    const { title } = req.body;
 
     const board = await BoardModel.findOne({
       id: boardId,
@@ -38,7 +39,7 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
       return res.status(404).json({ message: "Board not found" });
     }
 
-    const lastFolder = await FolderModel.findOne({ boardId: boardId }).sort({
+    const lastFolder = await FolderModel.findOne({ boardId }).sort({
       order: -1,
     });
 
@@ -46,7 +47,7 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
 
     const folder = new FolderModel({
       boardId: boardId,
-      title: req.body.title,
+      title,
       order: newOrder,
       isDefault: false,
     });
@@ -62,17 +63,6 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
 const UPDATE_FOLDER_BY_ID = async (req, res) => {
   try {
     const { folderId } = req.params;
-
-    const allowedUpdates = ["title"];
-    const updates = {};
-
-    for (const key of allowedUpdates) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key];
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({ message: "No valid fields to update" });
-    }
 
     const folder = await FolderModel.findOne({ id: folderId });
 
@@ -91,8 +81,8 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
 
     const updatedFolder = await FolderModel.findOneAndUpdate(
       { id: folderId },
-      { $set: updates },
-      { returnDocument: "after", runValidators: true },
+      { $set: req.body },
+      { new: true },
     );
 
     return res.status(200).json({
@@ -131,7 +121,7 @@ const DELETE_FOLDER_BY_ID = async (req, res) => {
       return res.status(404).json({ message: "Folder not found" });
     }
     await ImageModel.updateMany(
-      { folderId: folderId, boardId: board.id },
+      { folderId, boardId: board.id },
       { $set: { folderId: board.defaultFolderId } },
     );
 

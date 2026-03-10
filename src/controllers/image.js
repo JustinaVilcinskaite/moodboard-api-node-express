@@ -37,10 +37,6 @@ const CREATE_IMAGE_BY_URL = async (req, res) => {
     const { boardId } = req.params;
     const { url, folderId, note, tags } = req.body;
 
-    if (!url) {
-      return res.status(400).json({ message: "Image url is required" });
-    }
-
     const board = await BoardModel.findOne({
       id: boardId,
       ownerId: req.userId,
@@ -50,7 +46,7 @@ const CREATE_IMAGE_BY_URL = async (req, res) => {
       return res.status(404).json({ message: "Board not found" });
     }
 
-    const targetFolderId = folderId || board.defaultFolderId;
+    const targetFolderId = folderId ?? board.defaultFolderId;
 
     const folder = await FolderModel.findOne({ id: targetFolderId, boardId });
 
@@ -72,7 +68,7 @@ const CREATE_IMAGE_BY_URL = async (req, res) => {
       folderId: targetFolderId,
       url,
       order: newOrder,
-      note: note ?? "",
+      note,
       tags,
     });
 
@@ -136,21 +132,10 @@ const UPDATE_IMAGE_BY_ID = async (req, res) => {
       return res.status(404).json({ message: "Image not found" });
     }
 
-    const allowedUpdates = ["note", "tags"];
-    const updates = {};
-
-    for (const key of allowedUpdates) {
-      if (req.body[key] !== undefined) updates[key] = req.body[key];
-    }
-
-    if (Object.keys(updates).length === 0) {
-      return res.status(400).json({ message: "No valid fields to update" });
-    }
-
     const updatedImage = await ImageModel.findOneAndUpdate(
       { id: imageId },
-      { $set: updates },
-      { returnDocument: "after", runValidators: true },
+      { $set: req.body },
+      { new: true },
     );
 
     return res

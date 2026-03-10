@@ -1,5 +1,8 @@
 import express from "express";
 import authUser from "../middlewares/auth.js";
+import { validateBody, validateParams } from "../middlewares/validation.js";
+import { createFolderSchema, updateFolderSchema } from "../schemas/folder.js";
+import { boardIdParamSchema, folderIdParamSchema } from "../schemas/params.js";
 
 import {
   GET_FOLDERS_BY_BOARD_ID,
@@ -11,16 +14,40 @@ import {
 
 const router = express.Router();
 
-// TODO: data validation
 // TOD0: Later refactor public and auth enpoints into one
 
-router.get("/boards/:boardId/folders", authUser, GET_FOLDERS_BY_BOARD_ID);
-router.post("/boards/:boardId/folders", authUser, CREATE_FOLDER_FOR_BOARD);
-// maybe change to pacth
-router.put("/folders/:folderId", authUser, UPDATE_FOLDER_BY_ID);
-router.delete("/folders/:folderId", authUser, DELETE_FOLDER_BY_ID);
+router.get(
+  "/boards/:boardId/folders",
+  authUser,
+  validateParams(boardIdParamSchema),
+  GET_FOLDERS_BY_BOARD_ID,
+);
+router.post(
+  "/boards/:boardId/folders",
+  authUser,
+  validateParams(boardIdParamSchema),
+  validateBody(createFolderSchema),
+  CREATE_FOLDER_FOR_BOARD,
+);
+router.patch(
+  "/folders/:folderId",
+  authUser,
+  validateParams(folderIdParamSchema),
+  validateBody(updateFolderSchema),
+  UPDATE_FOLDER_BY_ID,
+);
+router.delete(
+  "/folders/:folderId",
+  authUser,
+  validateParams(folderIdParamSchema),
+  DELETE_FOLDER_BY_ID,
+);
 
 // public route
-router.get("/public/boards/:boardId/folders", GET_PUBLIC_FOLDERS_BY_BOARD_ID);
+router.get(
+  "/public/boards/:boardId/folders",
+  validateParams(boardIdParamSchema),
+  GET_PUBLIC_FOLDERS_BY_BOARD_ID,
+);
 
 export default router;
