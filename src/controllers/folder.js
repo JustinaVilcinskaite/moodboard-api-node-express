@@ -60,6 +60,71 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
+const REORDER_FOLDERS_BY_BOARD = async (req, res) => {
+  try {
+    const { boardId } = req.params;
+    const { folderIds } = req.body;
+
+    const board = await BoardModel.findOne({
+      id: boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    const folders = await FolderModel.find({ boardId });
+
+    const defaultFolder = folders.find((folder) => folder.isDefault);
+    if (!defaultFolder) {
+      return res.status(400).json({ message: "Default folder is missing" });
+    }
+
+    const reorderableFolderIds = folders
+      .filter((folder) => !folder.isDefault)
+      .map((folder) => folder.id);
+
+    const hasInvalidIds = folderIds.some(
+      (id) => !reorderableFolderIds.includes(id),
+    );
+
+    if (hasInvalidIds) {
+      return res.status(400).json({ message: "Invalid folder order data" });
+    }
+
+    const bulkUpdates = [
+      {
+        updateOne: {
+          filter: { id: defaultFolder.id },
+          update: { $set: { order: 0 } },
+        },
+      },
+      ...folderIds.map((folderId, index) => ({
+        updateOne: {
+          filter: { id: folderId, boardId },
+          update: { $set: { order: index + 1 } },
+        },
+      })),
+    ];
+
+    await FolderModel.bulkWrite(bulkUpdates);
+
+    const updatedFolders = await FolderModel.find({ boardId }).sort({
+      order: 1,
+    });
+
+    return res.status(200).json({
+      message: "Folders reordered successfully",
+      folders: updatedFolders,
+    });
+  } catch (error) {
+    console.error("REORDER_FOLDERS_BY_BOARD error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
 const UPDATE_FOLDER_BY_ID = async (req, res) => {
   try {
     const { folderId } = req.params;
@@ -167,4 +232,5 @@ export {
   UPDATE_FOLDER_BY_ID,
   DELETE_FOLDER_BY_ID,
   GET_PUBLIC_FOLDERS_BY_BOARD_ID,
+  REORDER_FOLDERS_BY_BOARD,
 };

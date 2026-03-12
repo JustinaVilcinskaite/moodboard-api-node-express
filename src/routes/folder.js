@@ -1,7 +1,11 @@
 import express from "express";
 import authUser from "../middlewares/auth.js";
 import { validateBody, validateParams } from "../middlewares/validation.js";
-import { createFolderSchema, updateFolderSchema } from "../schemas/folder.js";
+import {
+  createFolderSchema,
+  updateFolderSchema,
+  reorderFoldersSchema,
+} from "../schemas/folder.js";
 import { boardIdParamSchema, folderIdParamSchema } from "../schemas/params.js";
 
 import {
@@ -10,6 +14,7 @@ import {
   UPDATE_FOLDER_BY_ID,
   DELETE_FOLDER_BY_ID,
   GET_PUBLIC_FOLDERS_BY_BOARD_ID,
+  REORDER_FOLDERS_BY_BOARD,
 } from "../controllers/folder.js";
 
 const router = express.Router();
@@ -28,6 +33,14 @@ router.post(
   validateParams(boardIdParamSchema),
   validateBody(createFolderSchema),
   CREATE_FOLDER_FOR_BOARD,
+);
+
+router.patch(
+  "/boards/:boardId/folders/reorder",
+  authUser,
+  validateParams(boardIdParamSchema),
+  validateBody(reorderFoldersSchema),
+  REORDER_FOLDERS_BY_BOARD,
 );
 
 router.patch(
