@@ -2,6 +2,9 @@ import BoardModel from "../models/board.js";
 import FolderModel from "../models/folder.js";
 import ImageModel from "../models/image.js";
 
+
+/// TODO: support optional folderId query for folder-specific image view
+// while keeping board-wide image overview in the same endpoint.
 const GET_IMAGES_BY_BOARD = async (req, res) => {
   try {
     const { boardId } = req.params;

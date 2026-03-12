@@ -29,6 +29,7 @@ router.post(
   validateBody(createFolderSchema),
   CREATE_FOLDER_FOR_BOARD,
 );
+
 router.patch(
   "/folders/:folderId",
   authUser,

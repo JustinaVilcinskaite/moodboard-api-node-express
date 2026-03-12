@@ -122,42 +122,7 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
   }
 };
 
-// UPDATE_BOARD_BY_ID (Explicit field mapping version)
-// Updates board by explicitly listing editable fields.
-// Simple and very readable approach.
 
-// const UPDATE_BOARD_BY_ID = async (req, res) => {
-//   try {
-//     const { boardId} = req.params;
-
-// // Only updating editable fields explicitly (prevents updating ownerId etc.)
-
-// // Only updating editable fields explicitly
-// // Prevents accidental update of protected fields
-
-//     const updatedBoard = await BoardModel.findOneAndUpdate(
-//       { id: boardId, ownerId: req.userId },
-//       {
-//         title: req.body.title,
-//         description: req.body.description,
-//         isPublic: req.body.isPublic,
-//       },
-//       { new: true, runValidators: true },
-//     );
-
-//     if (!updatedBoard) {
-//       return res.status(404).json({ message: "Board not found" });
-//     }
-
-//     return res.status(200).json({
-//       message: "Board updated successfully",
-//       board: updatedBoard,
-//     });
-//   } catch (error) {
-//     console.error("UPDATE_BOARD_BY_ID error:", error);
-//     return res.status(500).json({ message: "Server error" });
-//   }
-// };
 
 //  UPDATE_BOARD_BY_ID (Basic version - less secure)
 

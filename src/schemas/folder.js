@@ -20,3 +20,12 @@ export const updateFolderSchema = Joi.object({
   .messages({
     "object.min": "At least one field is required for update",
   });
+
+
+export const reorderFoldersSchema = Joi.object({
+  folderIds: Joi.array().items(Joi.string().required()).min(1).unique().required().messages({
+    "array.base": "folderIds must be an array",
+    "array.min": "At least one folder id is required",
+    "any.required": "folderIds is required",
+  }),
+});

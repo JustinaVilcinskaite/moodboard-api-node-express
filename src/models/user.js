@@ -4,7 +4,7 @@ import { capitalizeFirstLetter } from "../utils/string-modifier.js";
 
 const userSchema = new mongoose.Schema(
   {
-    id: { type: String, default: uuidv4, unique: true },
+    id: { type: String, default: uuidv4, unique: true, index: true },
     name: {
       type: String,
       required: true,

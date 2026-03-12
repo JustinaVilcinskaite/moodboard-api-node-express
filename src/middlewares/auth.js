@@ -14,7 +14,7 @@ const authUser = (req, res, next) => {
 
     req.userId = decodedInfo.userId;
 
-    next();
+    return next();
   } catch (error) {
     console.error("authUser middleware error:", error);
     return res.status(401).json({ message: "Auth failed" });
@@ -45,4 +45,3 @@ export default authUser;
 // };
 
 // export default authUser;
-
