@@ -1,13 +1,12 @@
 import mongoose from "mongoose";
 import { v4 as uuidv4 } from "uuid";
 
-// TODO: prevent duplicate order values inside the same board
-
 const folderSchema = mongoose.Schema(
   {
     id: { type: String, default: uuidv4, unique: true, index: true },
     boardId: { type: String, required: true },
     title: { type: String, required: true, trim: true },
+    // TODO: keep folder order unique within each board during create/reorder
     order: { type: Number, required: true },
     isDefault: { type: Boolean, default: false },
   },
@@ -27,3 +26,4 @@ folderSchema.index(
 );
 
 export default mongoose.model("Folder", folderSchema);
+

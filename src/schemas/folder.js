@@ -9,15 +9,12 @@ export const createFolderSchema = Joi.object({
 });
 
 export const updateFolderSchema = Joi.object({
-  title: Joi.string().trim().max(100).optional().messages({
+  title: Joi.string().trim().max(100).required().messages({
     "string.empty": "Title cannot be empty",
     "string.max": "Title must be at most 100 characters long",
+    "any.required": "Title is required",
   }),
-})
-  .min(1)
-  .messages({
-    "object.min": "At least one field is required for update",
-  });
+});
 
 
 export const reorderFoldersSchema = Joi.object({

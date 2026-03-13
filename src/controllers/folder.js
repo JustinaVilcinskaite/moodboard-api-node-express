@@ -54,7 +54,9 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
 
     await folder.save();
 
-    return res.status(201).json({ message: "Folder created successfully", folder });
+    return res
+      .status(201)
+      .json({ message: "Folder created successfully", folder });
   } catch (error) {
     console.error("CREATE_FOLDER_FOR_BOARD error:", error);
     return res.status(500).json({ message: "Server error" });
@@ -135,6 +137,12 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
       return res.status(404).json({ message: "Folder not found" });
     }
 
+    if (folder.isDefault) {
+      return res.status(400).json({
+        message: "Default folder title cannot be changed",
+      });
+    }
+
     const board = await BoardModel.findOne({
       id: folder.boardId,
       ownerId: req.userId,
@@ -147,11 +155,11 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
     const updatedFolder = await FolderModel.findOneAndUpdate(
       { id: folderId },
       { $set: req.body },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     return res.status(200).json({
-      message: "Folder has been updated",
+      message: "Folder updated successfully",
       folder: updatedFolder,
     });
   } catch (error) {
@@ -160,8 +168,8 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
   }
 };
 
-// TODO: Later, when image reorder is implemented,
-// review whether moved images should receive new order values in the default folder.
+// TODO: when image reordering is implemented,
+// ensure moved images receive correct order values in the default folder
 const DELETE_FOLDER_BY_ID = async (req, res) => {
   try {
     const { folderId } = req.params;
@@ -193,8 +201,7 @@ const DELETE_FOLDER_BY_ID = async (req, res) => {
     await FolderModel.deleteOne({ id: folderId });
 
     return res.status(200).json({
-      message: "Folder has been deleted",
-      folder,
+      message: "Folder was deleted",
     });
   } catch (error) {
     console.error("DELETE_FOLDER_BY_ID error:", error);
@@ -215,9 +222,11 @@ const GET_PUBLIC_FOLDERS_BY_BOARD_ID = async (req, res) => {
       return res.status(404).json({ message: "Board not found" });
     }
 
-    const folders = await FolderModel.find({ boardId: boardId }).sort({
-      order: 1,
-    });
+    const folders = await FolderModel.find({ boardId: boardId })
+      .select("id title description createdAt updatedAt -_id")
+      .sort({
+        order: 1,
+      });
 
     return res.status(200).json({ folders });
   } catch (error) {

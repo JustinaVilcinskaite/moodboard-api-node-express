@@ -24,7 +24,6 @@ const CREATE_BOARD = async (req, res) => {
   try {
     const { title, description, isPublic } = req.body;
 
-
     const boardId = uuidv4();
     const defaultFolderId = uuidv4();
 
@@ -106,7 +105,7 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
     const updatedBoard = await BoardModel.findOneAndUpdate(
       { id: boardId, ownerId: req.userId },
       { $set: req.body },
-      { new: true },
+      { returnDocument: "after" },
     );
 
     // why check after? should wonershio shoul be checked before
