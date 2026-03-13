@@ -14,3 +14,4 @@ router.post("/auth/login", validateBody(loginSchema), LOGIN);
 router.get("/auth/me", authUser, VALIDATE_LOGIN);
 
 export default router;
+

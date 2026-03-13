@@ -15,7 +15,7 @@ const SIGN_UP = async (req, res) => {
     // Synchronous bcrypt version (blocks event loop)
 
     // const salt = bcrypt.genSaltSync(10);
-    // const hash = bcrypt.hashSync(req.body.password, salt);
+    // const hash = bcrypt.hashSync(password, salt);
 
     // const user = new UserModel({
     //   name,
@@ -43,6 +43,7 @@ const SIGN_UP = async (req, res) => {
     await user.save();
 
     return res.status(201).json({
+      // ? why return user data?
       user: { id: user.id, name: user.name, email: user.email },
       message: "User registered successfully.",
     });
@@ -65,13 +66,13 @@ const LOGIN = async (req, res) => {
     }
 
     // const isPasswordMatch = bcrypt.compareSync(
-    //   req.body.password,
+    //   password,
     //   user.password,
     // );
 
     // non-blocking
     const isPasswordMatch = await bcrypt.compare(
-      req.body.password,
+      password,
       user.password,
     );
 

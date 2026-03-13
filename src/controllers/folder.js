@@ -54,7 +54,7 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
 
     await folder.save();
 
-    return res.status(201).json({ message: "Folder has been added", folder });
+    return res.status(201).json({ message: "Folder created successfully", folder });
   } catch (error) {
     console.error("CREATE_FOLDER_FOR_BOARD error:", error);
     return res.status(500).json({ message: "Server error" });

@@ -24,6 +24,7 @@ const CREATE_BOARD = async (req, res) => {
   try {
     const { title, description, isPublic } = req.body;
 
+
     const boardId = uuidv4();
     const defaultFolderId = uuidv4();
 
@@ -48,18 +49,19 @@ const CREATE_BOARD = async (req, res) => {
       defaultFolderId,
     });
 
-    // Save both; if board save fails after folder save, delete the folder
+    await defaultFolder.save();
+    // If board creation fails after folder is saved,
+    // remove the folder to avoid leaving orphan data.
     try {
-      await defaultFolder.save();
       await board.save();
-    } catch (err) {
+    } catch (error) {
       await FolderModel.deleteOne({ id: defaultFolderId }).catch(() => {});
-      throw err;
+      throw error;
     }
 
     return res
       .status(201)
-      .json({ message: "Board has been added", board, defaultFolder });
+      .json({ message: "Board created successfully", board, defaultFolder });
   } catch (error) {
     console.error("CREATE_BOARD error:", error);
     return res.status(500).json({ message: "Server error" });
@@ -107,6 +109,7 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
       { new: true },
     );
 
+    // why check after? should wonershio shoul be checked before
     // If no board found (either doesn't exist or not owned by user)
     if (!updatedBoard) {
       return res.status(404).json({ message: "Board not found" });
@@ -121,8 +124,6 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
-
-
 
 //  UPDATE_BOARD_BY_ID (Basic version - less secure)
 
@@ -168,7 +169,7 @@ const DELETE_BOARD_BY_ID = async (req, res) => {
   try {
     const { boardId } = req.params;
 
-    const board = await BoardModel.findOneAndDelete({
+    const board = await BoardModel.findOne({
       id: boardId,
       ownerId: req.userId,
     });
@@ -179,10 +180,10 @@ const DELETE_BOARD_BY_ID = async (req, res) => {
 
     await ImageModel.deleteMany({ boardId });
     await FolderModel.deleteMany({ boardId });
+    await BoardModel.deleteOne({ id: boardId, ownerId: req.userId });
 
     return res.status(200).json({
       message: "Board was deleted",
-      board,
     });
   } catch (error) {
     console.error("DELETE_BOARD_BY_ID error:", error);
@@ -193,7 +194,7 @@ const DELETE_BOARD_BY_ID = async (req, res) => {
 const GET_ALL_PUBLIC_BOARDS = async (req, res) => {
   try {
     const boards = await BoardModel.find({ isPublic: true })
-      .select("id title description createdAt")
+      .select("id title description createdAt updatedAt -_id")
       .sort({
         createdAt: -1,
       });
@@ -209,7 +210,10 @@ const GET_PUBLIC_BOARD_BY_ID = async (req, res) => {
   try {
     const { boardId } = req.params;
 
-    const board = await BoardModel.findOne({ id: boardId, isPublic: true });
+    const board = await BoardModel.findOne({
+      id: boardId,
+      isPublic: true,
+    }).select("id title description createdAt updatedAt -_id");
 
     if (!board) {
       return res.status(404).json({ message: "Board not found" });

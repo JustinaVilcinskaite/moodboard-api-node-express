@@ -31,7 +31,7 @@ export const validateBody = (schema) => {
 
     req.body = value;
 
-    next();
+    return next();
   };
 };
 
@@ -50,6 +50,6 @@ export const validateParams = (schema) => {
 
     req.params = value;
 
-    next();
+    return next();
   };
 };

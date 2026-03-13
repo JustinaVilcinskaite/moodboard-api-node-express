@@ -15,8 +15,8 @@ app.use(express.json());
 mongoose
   .connect(process.env.MONGO_CONNECTION)
   .then(() => console.log("Connected to DB successfully!"))
-  .catch((err) => {
-    console.log(err);
+  .catch((error) => {
+    console.log(error);
   });
 
 app.use(userRouter);
@@ -24,7 +24,7 @@ app.use(boardRouter);
 app.use(folderRouter);
 app.use(imageRouter);
 
-app.use((re, res) => {
+app.use((req, res) => {
   return res
     .status(404)
     .send({ message: "Sorry, this endpoint does not exist" });

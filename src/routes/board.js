@@ -26,6 +26,7 @@ router.get(
   validateParams(boardIdParamSchema),
   GET_BOARD_BY_ID,
 );
+
 router.patch(
   "/boards/:boardId",
   authUser,
