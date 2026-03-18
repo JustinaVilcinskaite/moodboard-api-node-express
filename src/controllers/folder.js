@@ -155,7 +155,7 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
     const updatedFolder = await FolderModel.findOneAndUpdate(
       { id: folderId },
       { $set: req.body },
-      { returnDocument: "after" },
+      { returnDocument: "after", runValidators: true },
     );
 
     return res.status(200).json({

@@ -2,8 +2,8 @@ import BoardModel from "../models/board.js";
 import FolderModel from "../models/folder.js";
 import ImageModel from "../models/image.js";
 
-/// TODO: support optional folderId query for folder-specific image view
-// while keeping board-wide image overview in the same endpoint.
+// TODO: Later decide whether folder-specific image view should use
+// a query param on this endpoint or a separate folder-images endpoint.
 const GET_IMAGES_BY_BOARD = async (req, res) => {
   try {
     const { boardId } = req.params;
@@ -18,9 +18,7 @@ const GET_IMAGES_BY_BOARD = async (req, res) => {
     }
 
     const images = await ImageModel.find({ boardId }).sort({
-      order: 1,
-
-      createdAt: 1,
+      createdAt: -1,
     });
 
     return res.status(200).json({ images });
@@ -56,12 +54,12 @@ const CREATE_IMAGE_BY_URL = async (req, res) => {
       return res.status(404).json({ message: "Folder not found" });
     }
 
-    const firstImage = await ImageModel.findOne({
+    const lastImage = await ImageModel.findOne({
       boardId,
       folderId: targetFolderId,
-    }).sort({ order: 1 });
+    }).sort({ order: -1 });
 
-    const newOrder = firstImage ? firstImage.order - 1 : 0;
+    const newOrder = lastImage ? lastImage.order + 1 : 0;
 
     // TODO: maybe later use create()
 
@@ -139,7 +137,7 @@ const UPDATE_IMAGE_BY_ID = async (req, res) => {
     const updatedImage = await ImageModel.findOneAndUpdate(
       { id: imageId },
       { $set: req.body },
-      { new: true },
+      { returnDocument: "after", runValidators: true },
     );
 
     return res
@@ -180,7 +178,6 @@ const DELETE_IMAGE_BY_ID = async (req, res) => {
 
     return res.status(200).json({
       message: "Image deleted successfully",
-      image,
     });
   } catch (error) {
     console.error("DELETE_IMAGE_BY_ID error:", error);
@@ -201,8 +198,7 @@ const GET_PUBLIC_IMAGES_BY_BOARD = async (req, res) => {
     }
 
     const images = await ImageModel.find({ boardId }).sort({
-      order: 1,
-      createdAt: 1,
+      createdAt: -1,
     });
 
     return res.status(200).json({ images });

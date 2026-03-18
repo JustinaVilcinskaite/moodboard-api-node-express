@@ -105,7 +105,7 @@ const UPDATE_BOARD_BY_ID = async (req, res) => {
     const updatedBoard = await BoardModel.findOneAndUpdate(
       { id: boardId, ownerId: req.userId },
       { $set: req.body },
-      { returnDocument: "after" },
+      { returnDocument: "after", runValidators: true },
     );
 
     // why check after? should wonershio shoul be checked before
