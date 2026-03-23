@@ -13,9 +13,7 @@ const folderSchema = mongoose.Schema(
   { timestamps: true },
 );
 // Index for listing folders inside a board in saved order
-
 folderSchema.index({ boardId: 1, order: 1 });
-
 // Enforce only one default folder per board
 folderSchema.index(
   { boardId: 1 },
@@ -26,4 +24,3 @@ folderSchema.index(
 );
 
 export default mongoose.model("Folder", folderSchema);
-

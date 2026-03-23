@@ -12,9 +12,7 @@ const boardSchema = mongoose.Schema(
   },
   { timestamps: true },
 );
-// Index for listing a user's boards newest first
 boardSchema.index({ ownerId: 1, createdAt: -1 });
-// Index for listing public boards newest first
 boardSchema.index({ isPublic: 1, createdAt: -1 });
 
 export default mongoose.model("Board", boardSchema);

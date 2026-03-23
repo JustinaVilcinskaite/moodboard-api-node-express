@@ -61,8 +61,6 @@ const CREATE_IMAGE_BY_URL = async (req, res) => {
 
     const newOrder = lastImage ? lastImage.order + 1 : 0;
 
-    // TODO: maybe later use create()
-
     const image = new ImageModel({
       boardId,
       folderId: targetFolderId,

@@ -35,14 +35,6 @@ router.post(
 );
 
 router.patch(
-  "/boards/:boardId/folders/reorder",
-  authUser,
-  validateParams(boardIdParamSchema),
-  validateBody(reorderFoldersSchema),
-  REORDER_FOLDERS_BY_BOARD,
-);
-
-router.patch(
   "/folders/:folderId",
   authUser,
   validateParams(folderIdParamSchema),
@@ -54,6 +46,14 @@ router.delete(
   authUser,
   validateParams(folderIdParamSchema),
   DELETE_FOLDER_BY_ID,
+);
+
+router.patch(
+  "/boards/:boardId/folders/reorder",
+  authUser,
+  validateParams(boardIdParamSchema),
+  validateBody(reorderFoldersSchema),
+  REORDER_FOLDERS_BY_BOARD,
 );
 
 // public route

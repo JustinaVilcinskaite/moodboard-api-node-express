@@ -80,6 +80,7 @@ const REORDER_FOLDERS_BY_BOARD = async (req, res) => {
     const folders = await FolderModel.find({ boardId });
 
     const defaultFolder = folders.find((folder) => folder.isDefault);
+
     if (!defaultFolder) {
       return res.status(400).json({ message: "Default folder is missing" });
     }
@@ -87,6 +88,10 @@ const REORDER_FOLDERS_BY_BOARD = async (req, res) => {
     const reorderableFolderIds = folders
       .filter((folder) => !folder.isDefault)
       .map((folder) => folder.id);
+
+    if (folderIds.length !== reorderableFolderIds.length) {
+      return res.status(400).json({ message: "Invalid folder order data" });
+    }
 
     const hasInvalidIds = folderIds.some(
       (id) => !reorderableFolderIds.includes(id),
@@ -99,7 +104,7 @@ const REORDER_FOLDERS_BY_BOARD = async (req, res) => {
     const bulkUpdates = [
       {
         updateOne: {
-          filter: { id: defaultFolder.id },
+          filter: { id: defaultFolder.id, boardId },
           update: { $set: { order: 0 } },
         },
       },

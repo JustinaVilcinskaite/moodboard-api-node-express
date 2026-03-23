@@ -19,10 +19,10 @@ mongoose
     console.log(error);
   });
 
-app.use(userRouter);
-app.use(boardRouter);
-app.use(folderRouter);
-app.use(imageRouter);
+app.use("/api/users", userRouter);
+app.use("/api/boards", boardRouter);
+app.use("/api/folders", folderRouter);
+app.use("/api/images", imageRouter);
 
 app.use((req, res) => {
   return res

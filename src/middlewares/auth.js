@@ -10,9 +10,9 @@ const authUser = (req, res, next) => {
 
     const token = authHeader.split(" ")[1];
 
-    const decodedInfo = jwt.verify(token, process.env.JWT_SECRET);
+    const decodedToken = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.userId = decodedInfo.userId;
+    req.userId = decodedToken.userId;
 
     return next();
   } catch (error) {
@@ -22,26 +22,3 @@ const authUser = (req, res, next) => {
 };
 
 export default authUser;
-
-// import jwt from "jsonwebtoken";
-
-// const authUser = (req, res, next) => {
-//   try {
-//     const token = req.headers.authorization;
-
-//     if (!token) {
-//       return res.status(401).json({ message: "Auth failed" });
-//     }
-
-//     const decodedInfo = jwt.verify(token, process.env.JWT_SECRET);
-
-//     req.userId = decodedInfo.userId;
-
-//     return next();
-//   } catch (error) {
-//     console.error("authUser middleware error:", error);
-//     return res.status(401).json({ message: "Auth failed" });
-//   }
-// };
-
-// export default authUser;

@@ -12,26 +12,6 @@ const SIGN_UP = async (req, res) => {
       return res.status(409).json({ message: "Email already registered" });
     }
 
-    // Synchronous bcrypt version (blocks event loop)
-
-    // const salt = bcrypt.genSaltSync(10);
-    // const hash = bcrypt.hashSync(password, salt);
-
-    // const user = new UserModel({
-    //   name,
-    //   email,
-    //   password: hash,
-    // });
-
-    // await user.save();
-
-    // Async version with manual salt
-
-    // const salt = await bcrypt.genSalt(10);
-    // const hash = await bcrypt.hash(password, salt);
-
-    // Async hash with internal salt generation (non-blocking)
-
     const hash = await bcrypt.hash(password, 10);
 
     const user = new UserModel({
@@ -43,7 +23,6 @@ const SIGN_UP = async (req, res) => {
     await user.save();
 
     return res.status(201).json({
-      // ? why return user data?
       user: { id: user.id, name: user.name, email: user.email },
       message: "User registered successfully.",
     });
@@ -65,16 +44,7 @@ const LOGIN = async (req, res) => {
       });
     }
 
-    // const isPasswordMatch = bcrypt.compareSync(
-    //   password,
-    //   user.password,
-    // );
-
-    // non-blocking
-    const isPasswordMatch = await bcrypt.compare(
-      password,
-      user.password,
-    );
+    const isPasswordMatch = await bcrypt.compare(password, user.password);
 
     if (!isPasswordMatch) {
       return res.status(401).json({
@@ -101,7 +71,21 @@ const LOGIN = async (req, res) => {
   }
 };
 
-// TODO: later VALIDATE_LOGIN
-const VALIDATE_LOGIN = (req, res) => {};
+const GET_ME = async (req, res) => {
+  try {
+    const user = await UserModel.findOne({ id: req.userId }).select(
+      "-_id id name email createdAt updatedAt",
+    );
 
-export { SIGN_UP, LOGIN, VALIDATE_LOGIN };
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    return res.status(200).json({ user });
+  } catch (error) {
+    console.error("GET_ME error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+export { SIGN_UP, LOGIN, GET_ME };
