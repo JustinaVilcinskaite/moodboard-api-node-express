@@ -4,6 +4,7 @@ import ImageModel from "../models/image.js";
 
 // TODO: Later decide whether folder-specific image view should use
 // a query param on this endpoint or a separate folder-images endpoint.
+// Current approach: returns ALL images for the board (used for "Overview" view)
 const GET_IMAGES_BY_BOARD = async (req, res) => {
   try {
     const { boardId } = req.params;
@@ -31,6 +32,7 @@ const GET_IMAGES_BY_BOARD = async (req, res) => {
 };
 
 // Phase 1 - later do image upload
+// Currently supports only URL-based images (no file storage yet)
 
 const CREATE_IMAGE_BY_URL = async (req, res) => {
   try {
@@ -112,6 +114,8 @@ const GET_IMAGE_BY_ID = async (req, res) => {
 };
 
 // Phase 1 - later do image reorder
+// Currently only supports updating simple fields (note, tags..)
+// Reordering (changing "order" or moving between folders) will be handled separately
 
 const UPDATE_IMAGE_BY_ID = async (req, res) => {
   try {

@@ -56,7 +56,7 @@ router.patch(
   REORDER_FOLDERS_BY_BOARD,
 );
 
-// public route
+// Public route
 router.get(
   "/public/boards/:boardId/folders",
   validateParams(boardIdParamSchema),

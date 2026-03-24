@@ -40,7 +40,7 @@ router.delete(
   DELETE_BOARD_BY_ID,
 );
 
-// public routes
+// Public routes
 router.get("/public/boards", GET_ALL_PUBLIC_BOARDS);
 router.get(
   "/public/boards/:boardId",

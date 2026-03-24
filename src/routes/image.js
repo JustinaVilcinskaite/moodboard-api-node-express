@@ -24,7 +24,7 @@ router.get(
   validateParams(boardIdParamSchema),
   GET_IMAGES_BY_BOARD,
 );
-// Phase 1 - later do image upload
+// Phase 1: images are created via URL only (no file upload yet)
 router.post(
   "/boards/:boardId/images",
   authUser,
@@ -52,7 +52,7 @@ router.delete(
   DELETE_IMAGE_BY_ID,
 );
 
-// public routes
+// Public routes
 router.get(
   "/public/boards/:boardId/images",
   validateParams(boardIdParamSchema),
@@ -64,8 +64,11 @@ router.get(
   GET_PUBLIC_IMAGE_BY_ID,
 );
 
-// Upload and reorder routes
+// FUTURE FEATURES
+// Upload images (instead of URL-based)
 // router.post("/boards/:boardId/images/upload", authUser, UPLOAD_IMAGES);
+
+// Reordering images (drag & drop support)
 // router.post("/boards/:boardId/images/reorder", authUser, REORDER_IMAGES);
 
 export default router;
