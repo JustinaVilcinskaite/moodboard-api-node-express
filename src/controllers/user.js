@@ -1,6 +1,6 @@
 import UserModel from "../models/user.js";
 import bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
+import generateToken from "../utils/generateToken.js";
 
 const SIGN_UP = async (req, res) => {
   try {
@@ -22,7 +22,10 @@ const SIGN_UP = async (req, res) => {
 
     await user.save();
 
+    const token = generateToken(user);
+
     return res.status(201).json({
+      token,
       user: { id: user.id, name: user.name, email: user.email },
       message: "User registered successfully.",
     });
@@ -52,18 +55,12 @@ const LOGIN = async (req, res) => {
       });
     }
 
-    const token = jwt.sign(
-      {
-        email: user.email,
-        userId: user.id,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: "24h" },
-    );
+    const token = generateToken(user);
+
     return res.status(200).json({
       token,
       user: { id: user.id, name: user.name, email: user.email },
-      message: "Login was successful",
+      message: "User logged in successfully",
     });
   } catch (error) {
     console.error("LOGIN error:", error);
