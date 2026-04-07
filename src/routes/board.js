@@ -16,7 +16,7 @@ import {
 
 const router = express.Router();
 
-// TODO: Later refactor public and auth endpoints into one
+// TODO: Later maybe refactor public and auth endpoints into one
 router.get("/boards", authUser, GET_MY_BOARDS);
 router.post("/boards", authUser, validateBody(createBoardSchema), CREATE_BOARD);
 router.get(
