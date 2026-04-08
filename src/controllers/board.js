@@ -3,14 +3,30 @@ import BoardModel from "../models/board.js";
 import FolderModel from "../models/folder.js";
 import ImageModel from "../models/image.js";
 
+// TODO: Later refactor to Aggregation-based summary query
+
 const GET_MY_BOARDS = async (req, res) => {
   try {
     const boards = await BoardModel.find({ ownerId: req.userId }).sort({
       createdAt: -1,
     });
 
+    const boardsWithSummary = await Promise.all(
+      boards.map(async (board) => {
+        const images = await ImageModel.find({ boardId: board.id }).sort({
+          createdAt: 1,
+        });
+
+        return {
+          ...board.toObject(),
+          thumbnailUrl: images.length ? images[0].url : "",
+          imageCount: images.length,
+        };
+      }),
+    );
+
     return res.status(200).json({
-      boards,
+      boards: boardsWithSummary,
     });
   } catch (error) {
     console.error("GET_MY_BOARDS error:", error);
