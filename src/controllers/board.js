@@ -156,7 +156,22 @@ const GET_ALL_PUBLIC_BOARDS = async (req, res) => {
         createdAt: -1,
       });
 
-    return res.status(200).json({ boards });
+    const publicBoardsWithThumbnail = await Promise.all(
+      boards.map(async (board) => {
+        const firstImage = await ImageModel.findOne({ boardId: board.id }).sort(
+          {
+            createdAt: 1,
+          },
+        );
+
+        return {
+          ...board.toObject(),
+          thumbnailUrl: firstImage ? firstImage.url : "",
+        };
+      }),
+    );
+
+    return res.status(200).json({ boards: publicBoardsWithThumbnail });
   } catch (error) {
     console.error("GET_ALL_PUBLIC_BOARDS error:", error);
     return res.status(500).json({ message: "Server error" });
