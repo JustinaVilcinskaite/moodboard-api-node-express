@@ -19,7 +19,7 @@ import {
 
 const router = express.Router();
 
-// TODO: Later refactor public and auth endpoints into one
+// TODO: Later refactor public and auth endpoints into one. maybe?
 router.get(
   "/boards/:boardId/folders",
   authUser,
