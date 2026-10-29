@@ -11,6 +11,7 @@ const GET_MY_BOARDS = async (req, res) => {
       createdAt: -1,
     });
 
+    // ?
     const boardsWithSummary = await Promise.all(
       boards.map(async (board) => {
         const images = await ImageModel.find({ boardId: board.id }).sort({
@@ -84,14 +85,33 @@ const GET_BOARD_BY_ID = async (req, res) => {
 
     const board = await BoardModel.findOne({
       id: boardId,
-      ownerId: req.userId,
     });
 
     if (!board) {
       return res.status(404).json({ message: "Board not found" });
     }
 
-    return res.status(200).json({ board });
+    const isOwner = board.ownerId === req.userId;
+
+    if (isOwner) {
+      return res.status(200).json({ board, access: "owner" });
+    }
+
+    if (!board.isPublic) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    return res.status(200).json({
+      board: {
+        id: board.id,
+        title: board.title,
+        description: board.description,
+        isPublic: board.isPublic,
+        createdAt: board.createdAt,
+        updatedAt: board.updatedAt,
+      },
+      access: "public",
+    });
   } catch (error) {
     console.error("GET_BOARD_BY_ID error:", error);
     return res.status(500).json({ message: "Server error" });
@@ -156,6 +176,7 @@ const GET_ALL_PUBLIC_BOARDS = async (req, res) => {
         createdAt: -1,
       });
 
+    // ?
     const publicBoardsWithThumbnail = await Promise.all(
       boards.map(async (board) => {
         const firstImage = await ImageModel.findOne({ boardId: board.id }).sort(
@@ -178,26 +199,6 @@ const GET_ALL_PUBLIC_BOARDS = async (req, res) => {
   }
 };
 
-const GET_PUBLIC_BOARD_BY_ID = async (req, res) => {
-  try {
-    const { boardId } = req.params;
-
-    const board = await BoardModel.findOne({
-      id: boardId,
-      isPublic: true,
-    }).select("id title description createdAt updatedAt -_id");
-
-    if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-    }
-
-    return res.status(200).json({ board });
-  } catch (error) {
-    console.error("GET_PUBLIC_BOARD_BY_ID error:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
 export {
   GET_MY_BOARDS,
   CREATE_BOARD,
@@ -205,5 +206,4 @@ export {
   UPDATE_BOARD_BY_ID,
   DELETE_BOARD_BY_ID,
   GET_ALL_PUBLIC_BOARDS,
-  GET_PUBLIC_BOARD_BY_ID,
 };
