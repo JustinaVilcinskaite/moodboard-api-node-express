@@ -1,5 +1,6 @@
 import express from "express";
 import authUser from "../middlewares/auth.js";
+import optionalAuth from "../middlewares/optionalAuth.js";
 import { validateBody, validateParams } from "../middlewares/validation.js";
 import {
   createFolderSchema,
@@ -13,19 +14,19 @@ import {
   CREATE_FOLDER_FOR_BOARD,
   UPDATE_FOLDER_BY_ID,
   DELETE_FOLDER_BY_ID,
-  GET_PUBLIC_FOLDERS_BY_BOARD_ID,
   REORDER_FOLDERS_BY_BOARD,
 } from "../controllers/folder.js";
 
 const router = express.Router();
 
-// TODO: Later amybe refactor public and auth endpoints into one
+// Shared route for owner and public folder access
 router.get(
   "/boards/:boardId/folders",
-  authUser,
+  optionalAuth,
   validateParams(boardIdParamSchema),
   GET_FOLDERS_BY_BOARD_ID,
 );
+
 router.post(
   "/boards/:boardId/folders",
   authUser,
@@ -54,13 +55,6 @@ router.patch(
   validateParams(boardIdParamSchema),
   validateBody(reorderFoldersSchema),
   REORDER_FOLDERS_BY_BOARD,
-);
-
-// Public route
-router.get(
-  "/public/boards/:boardId/folders",
-  validateParams(boardIdParamSchema),
-  GET_PUBLIC_FOLDERS_BY_BOARD_ID,
 );
 
 export default router;

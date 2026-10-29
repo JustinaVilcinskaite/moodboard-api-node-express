@@ -8,16 +8,21 @@ const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
 
     const board = await BoardModel.findOne({
       id: boardId,
-      ownerId: req.userId,
     });
 
     if (!board) {
       return res.status(404).json({ message: "Board not found" });
     }
 
-    const folders = await FolderModel.find({ boardId }).sort({
-      order: 1,
-    });
+    const isOwner = board.ownerId === req.userId;
+
+    if (!isOwner && !board.isPublic) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    const folders = await FolderModel.find({ boardId })
+      .select("id title order isDefault createdAt updatedAt -_id")
+      .sort({ order: 1 });
 
     return res.status(200).json({ folders });
   } catch (error) {
@@ -25,6 +30,7 @@ const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
     return res.status(500).json({ message: "Server error" });
   }
 };
+
 const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
   try {
     const { boardId } = req.params;
@@ -214,37 +220,10 @@ const DELETE_FOLDER_BY_ID = async (req, res) => {
   }
 };
 
-const GET_PUBLIC_FOLDERS_BY_BOARD_ID = async (req, res) => {
-  try {
-    const { boardId } = req.params;
-
-    const board = await BoardModel.findOne({
-      id: boardId,
-      isPublic: true,
-    });
-
-    if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-    }
-
-    const folders = await FolderModel.find({ boardId: boardId })
-      .select("id title description createdAt updatedAt -_id")
-      .sort({
-        order: 1,
-      });
-
-    return res.status(200).json({ folders });
-  } catch (error) {
-    console.error("GET_PUBLIC_FOLDERS_BY_BOARD_ID error:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
 export {
   GET_FOLDERS_BY_BOARD_ID,
   CREATE_FOLDER_FOR_BOARD,
   UPDATE_FOLDER_BY_ID,
   DELETE_FOLDER_BY_ID,
-  GET_PUBLIC_FOLDERS_BY_BOARD_ID,
   REORDER_FOLDERS_BY_BOARD,
 };
