@@ -2,25 +2,37 @@ import BoardModel from "../models/board.js";
 import FolderModel from "../models/folder.js";
 import ImageModel from "../models/image.js";
 
-// TODO: Later decide whether folder-specific image view should use
-// a query param on this endpoint or a separate folder-images endpoint.
-// Current approach: returns ALL images for the board (used for "Overview" view)
+// Returns all images for the board.
+// Frontend filters images by folderId for the Folders view.
+// Overview will use the same images without folder filtering.
+// TODO: Consider adding an optional ?folderId= query parameter
+// for backend filtering if needed for folder-specific requests or pagination.
 const GET_IMAGES_BY_BOARD = async (req, res) => {
   try {
     const { boardId } = req.params;
 
     const board = await BoardModel.findOne({
       id: boardId,
-      ownerId: req.userId,
     });
 
     if (!board) {
       return res.status(404).json({ message: "Board not found" });
     }
 
-    const images = await ImageModel.find({ boardId }).sort({
-      createdAt: -1,
-    });
+    const isOwner = board.ownerId === req.userId;
+
+    if (!isOwner && !board.isPublic) {
+      return res.status(404).json({ message: "Board not found" });
+    }
+
+    const images = await ImageModel.find({ boardId })
+      .select(
+        "id boardId folderId url order note tags createdAt updatedAt -_id",
+      )
+      .sort({
+        folderId: 1,
+        order: 1,
+      });
 
     return res.status(200).json({ images });
   } catch (error) {
@@ -90,17 +102,25 @@ const GET_IMAGE_BY_ID = async (req, res) => {
   try {
     const { imageId } = req.params;
 
-    const image = await ImageModel.findOne({ id: imageId });
+    const image = await ImageModel.findOne({ id: imageId }).select(
+      "id boardId folderId url order note tags createdAt updatedAt -_id",
+    );
+
     if (!image) {
       return res.status(404).json({ message: "Image not found" });
     }
 
     const board = await BoardModel.findOne({
       id: image.boardId,
-      ownerId: req.userId,
     });
 
     if (!board) {
+      return res.status(404).json({ message: "Image not found" });
+    }
+
+    const isOwner = board.ownerId === req.userId;
+
+    if (!isOwner && !board.isPublic) {
       return res.status(404).json({ message: "Image not found" });
     }
 
@@ -189,63 +209,10 @@ const DELETE_IMAGE_BY_ID = async (req, res) => {
   }
 };
 
-const GET_PUBLIC_IMAGES_BY_BOARD = async (req, res) => {
-  try {
-    const { boardId } = req.params;
-
-    const board = await BoardModel.findOne({ id: boardId, isPublic: true });
-
-    if (!board) {
-      return res.status(404).json({ message: "Board not found" });
-    }
-
-    const images = await ImageModel.find({ boardId }).sort({
-      createdAt: -1,
-    });
-
-    return res.status(200).json({ images });
-  } catch (error) {
-    console.error("GET_PUBLIC_IMAGES_BY_BOARD error:", error);
-    return res.status(500).json({
-      message: "Server error",
-    });
-  }
-};
-
-const GET_PUBLIC_IMAGE_BY_ID = async (req, res) => {
-  try {
-    const { imageId } = req.params;
-
-    const image = await ImageModel.findOne({ id: imageId });
-
-    if (!image) {
-      return res.status(404).json({ message: "Image not found" });
-    }
-
-    const board = await BoardModel.findOne({
-      id: image.boardId,
-      isPublic: true,
-    });
-
-    if (!board) {
-      return res.status(404).json({ message: "Image not found" });
-    }
-
-    return res.status(200).json({ image });
-  } catch (error) {
-    console.error("GET_PUBLIC_IMAGE_BY_ID error:", error);
-    return res.status(500).json({
-      message: "Server error",
-    });
-  }
-};
-
 export {
   GET_IMAGES_BY_BOARD,
   CREATE_IMAGE_BY_URL,
   GET_IMAGE_BY_ID,
   UPDATE_IMAGE_BY_ID,
   DELETE_IMAGE_BY_ID,
-  GET_PUBLIC_IMAGES_BY_BOARD,
-  GET_PUBLIC_IMAGE_BY_ID,
 };

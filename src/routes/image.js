@@ -1,5 +1,6 @@
 import express from "express";
 import authUser from "../middlewares/auth.js";
+import optionalAuth from "../middlewares/optionalAuth.js";
 import { validateBody, validateParams } from "../middlewares/validation.js";
 import { createImageSchema, updateImageSchema } from "../schemas/image.js";
 import { boardIdParamSchema, imageIdParamSchema } from "../schemas/params.js";
@@ -10,17 +11,14 @@ import {
   GET_IMAGE_BY_ID,
   UPDATE_IMAGE_BY_ID,
   DELETE_IMAGE_BY_ID,
-  GET_PUBLIC_IMAGES_BY_BOARD,
-  GET_PUBLIC_IMAGE_BY_ID,
 } from "../controllers/image.js";
 
 const router = express.Router();
 
-// TODO: Later maybe refactor public and auth endpoints into one
-
+// Shared route for owner and public folder access
 router.get(
   "/boards/:boardId/images",
-  authUser,
+  optionalAuth,
   validateParams(boardIdParamSchema),
   GET_IMAGES_BY_BOARD,
 );
@@ -32,9 +30,11 @@ router.post(
   validateBody(createImageSchema),
   CREATE_IMAGE_BY_URL,
 );
+
+// Shared route for owner and public folder access
 router.get(
   "/images/:imageId",
-  authUser,
+  optionalAuth,
   validateParams(imageIdParamSchema),
   GET_IMAGE_BY_ID,
 );
@@ -50,18 +50,6 @@ router.delete(
   authUser,
   validateParams(imageIdParamSchema),
   DELETE_IMAGE_BY_ID,
-);
-
-// Public routes
-router.get(
-  "/public/boards/:boardId/images",
-  validateParams(boardIdParamSchema),
-  GET_PUBLIC_IMAGES_BY_BOARD,
-);
-router.get(
-  "/public/images/:imageId",
-  validateParams(imageIdParamSchema),
-  GET_PUBLIC_IMAGE_BY_ID,
 );
 
 // FUTURE FEATURES
