@@ -98,6 +98,7 @@ const CREATE_IMAGE_BY_URL = async (req, res) => {
   }
 };
 
+// Currently unused in the frontend; image details use already fetched board images.
 const GET_IMAGE_BY_ID = async (req, res) => {
   try {
     const { imageId } = req.params;
@@ -133,13 +134,14 @@ const GET_IMAGE_BY_ID = async (req, res) => {
   }
 };
 
-// Phase 1 - later do image reorder
-// Currently only supports updating simple fields (note, tags..)
-// Reordering (changing "order" or moving between folders) will be handled separately
+// Updates image metadata and supports moving between folders.
+// Reordering images within a folder will be implemented separately.
 
 const UPDATE_IMAGE_BY_ID = async (req, res) => {
   try {
     const { imageId } = req.params;
+
+    const { folderId } = req.body;
 
     const image = await ImageModel.findOne({ id: imageId });
 
@@ -156,9 +158,29 @@ const UPDATE_IMAGE_BY_ID = async (req, res) => {
       return res.status(404).json({ message: "Image not found" });
     }
 
+    const updates = { ...req.body };
+
+    if (folderId && folderId !== image.folderId) {
+      const folder = await FolderModel.findOne({
+        id: folderId,
+        boardId: image.boardId,
+      });
+
+      if (!folder) {
+        return res.status(404).json({ message: "Folder not found" });
+      }
+
+      const lastImage = await ImageModel.findOne({
+        boardId: image.boardId,
+        folderId,
+      }).sort({ order: -1 });
+
+      updates.order = lastImage ? lastImage.order + 1 : 0;
+    }
+
     const updatedImage = await ImageModel.findOneAndUpdate(
       { id: imageId },
-      { $set: req.body },
+      { $set: updates },
       { returnDocument: "after", runValidators: true },
     );
 

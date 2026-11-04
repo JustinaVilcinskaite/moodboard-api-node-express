@@ -41,6 +41,10 @@ export const updateImageSchema = Joi.object({
       "array.max": "Maximum 20 tags allowed",
       "string.max": "Each tag must be at most 50 characters long",
     }),
+
+  folderId: Joi.string().uuid().optional().messages({
+    "string.guid": "Folder ID must be a valid UUID",
+  }),
 })
   .min(1)
   .messages({
