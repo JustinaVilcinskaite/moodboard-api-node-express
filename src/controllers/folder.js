@@ -179,8 +179,7 @@ const UPDATE_FOLDER_BY_ID = async (req, res) => {
   }
 };
 
-// TODO: when image reordering is implemented,
-// ensure moved images receive correct order values in the default folder
+
 const DELETE_FOLDER_BY_ID = async (req, res) => {
   try {
     const { folderId } = req.params;
@@ -204,10 +203,34 @@ const DELETE_FOLDER_BY_ID = async (req, res) => {
     if (!board) {
       return res.status(404).json({ message: "Folder not found" });
     }
-    await ImageModel.updateMany(
-      { folderId, boardId: board.id },
-      { $set: { folderId: board.defaultFolderId } },
-    );
+
+    const images = await ImageModel.find({
+      folderId,
+      boardId: board.id,
+    }).sort({ order: 1, createdAt: 1 });
+
+    if (images.length > 0) {
+      const lastImage = await ImageModel.findOne({
+        boardId: board.id,
+        folderId: board.defaultFolderId,
+      }).sort({ order: -1 });
+
+      const nextOrder = lastImage ? lastImage.order + 1 : 0;
+
+      const bulkUpdates = images.map((image, index) => ({
+        updateOne: {
+          filter: { id: image.id, boardId: board.id },
+          update: {
+            $set: {
+              folderId: board.defaultFolderId,
+              order: nextOrder + index,
+            },
+          },
+        },
+      }));
+
+      await ImageModel.bulkWrite(bulkUpdates);
+    }
 
     await FolderModel.deleteOne({ id: folderId });
 
