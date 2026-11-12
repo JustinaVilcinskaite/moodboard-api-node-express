@@ -12,7 +12,7 @@ const boardSchema = mongoose.Schema(
   },
   { timestamps: true },
 );
-boardSchema.index({ ownerId: 1, createdAt: -1 });
+boardSchema.index({ ownerId: 1, updatedAt: -1 });
 boardSchema.index({ isPublic: 1, createdAt: -1 });
 
 export default mongoose.model("Board", boardSchema);

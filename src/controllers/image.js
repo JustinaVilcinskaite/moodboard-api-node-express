@@ -1,6 +1,7 @@
 import BoardModel from "../models/board.js";
 import FolderModel from "../models/folder.js";
 import ImageModel from "../models/image.js";
+import { updateBoardActivity } from "../utils/updateBoardActivity.js";
 
 // Returns all images for the board.
 // Frontend filters images by folderId for the Folders view.
@@ -85,6 +86,8 @@ const CREATE_IMAGE_BY_URL = async (req, res) => {
     });
 
     await image.save();
+
+    await updateBoardActivity(boardId);
 
     return res
       .status(201)
@@ -184,6 +187,8 @@ const UPDATE_IMAGE_BY_ID = async (req, res) => {
       { returnDocument: "after", runValidators: true },
     );
 
+    await updateBoardActivity(image.boardId);
+
     return res
       .status(200)
       .json({ message: "Image updated successfully", image: updatedImage });
@@ -219,6 +224,8 @@ const DELETE_IMAGE_BY_ID = async (req, res) => {
     }
 
     await ImageModel.deleteOne({ id: imageId });
+
+    await updateBoardActivity(image.boardId);
 
     return res.status(200).json({
       message: "Image deleted successfully",

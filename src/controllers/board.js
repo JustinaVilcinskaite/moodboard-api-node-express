@@ -8,7 +8,7 @@ import ImageModel from "../models/image.js";
 const GET_MY_BOARDS = async (req, res) => {
   try {
     const boards = await BoardModel.find({ ownerId: req.userId }).sort({
-      createdAt: -1,
+      updatedAt: -1,
     });
 
     // ?

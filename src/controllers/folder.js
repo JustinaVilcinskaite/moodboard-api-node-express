@@ -1,6 +1,7 @@
 import BoardModel from "../models/board.js";
 import FolderModel from "../models/folder.js";
 import ImageModel from "../models/image.js";
+import { updateBoardActivity } from "../utils/updateBoardActivity.js";
 
 const GET_FOLDERS_BY_BOARD_ID = async (req, res) => {
   try {
@@ -60,11 +61,121 @@ const CREATE_FOLDER_FOR_BOARD = async (req, res) => {
 
     await folder.save();
 
+    await updateBoardActivity(boardId);
+
     return res
       .status(201)
       .json({ message: "Folder created successfully", folder });
   } catch (error) {
     console.error("CREATE_FOLDER_FOR_BOARD error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+const UPDATE_FOLDER_BY_ID = async (req, res) => {
+  try {
+    const { folderId } = req.params;
+
+    const folder = await FolderModel.findOne({ id: folderId });
+
+    if (!folder) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    if (folder.isDefault) {
+      return res.status(400).json({
+        message: "Default folder title cannot be changed",
+      });
+    }
+
+    const board = await BoardModel.findOne({
+      id: folder.boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    const updatedFolder = await FolderModel.findOneAndUpdate(
+      { id: folderId },
+      { $set: req.body },
+      { returnDocument: "after", runValidators: true },
+    );
+
+    await updateBoardActivity(folder.boardId);
+
+    return res.status(200).json({
+      message: "Folder updated successfully",
+      folder: updatedFolder,
+    });
+  } catch (error) {
+    console.error("UPDATE_FOLDER_BY_ID error:", error);
+    return res.status(500).json({ message: "Server error" });
+  }
+};
+
+const DELETE_FOLDER_BY_ID = async (req, res) => {
+  try {
+    const { folderId } = req.params;
+
+    const folder = await FolderModel.findOne({ id: folderId });
+    if (!folder) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    if (folder.isDefault) {
+      return res
+        .status(400)
+        .json({ message: "Default folder cannot be deleted" });
+    }
+
+    const board = await BoardModel.findOne({
+      id: folder.boardId,
+      ownerId: req.userId,
+    });
+
+    if (!board) {
+      return res.status(404).json({ message: "Folder not found" });
+    }
+
+    const images = await ImageModel.find({
+      folderId,
+      boardId: board.id,
+    }).sort({ order: 1, createdAt: 1 });
+
+    if (images.length > 0) {
+      const lastImage = await ImageModel.findOne({
+        boardId: board.id,
+        folderId: board.defaultFolderId,
+      }).sort({ order: -1 });
+
+      const nextOrder = lastImage ? lastImage.order + 1 : 0;
+
+      const bulkUpdates = images.map((image, index) => ({
+        updateOne: {
+          filter: { id: image.id, boardId: board.id },
+          update: {
+            $set: {
+              folderId: board.defaultFolderId,
+              order: nextOrder + index,
+            },
+          },
+        },
+      }));
+
+      await ImageModel.bulkWrite(bulkUpdates);
+    }
+
+    await FolderModel.deleteOne({ id: folderId });
+
+    await updateBoardActivity(folder.boardId);
+
+    return res.status(200).json({
+      message: "Folder was deleted",
+    });
+  } catch (error) {
+    console.error("DELETE_FOLDER_BY_ID error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
@@ -124,6 +235,8 @@ const REORDER_FOLDERS_BY_BOARD = async (req, res) => {
 
     await FolderModel.bulkWrite(bulkUpdates);
 
+    await updateBoardActivity(boardId);
+
     const updatedFolders = await FolderModel.find({ boardId }).sort({
       order: 1,
     });
@@ -134,111 +247,6 @@ const REORDER_FOLDERS_BY_BOARD = async (req, res) => {
     });
   } catch (error) {
     console.error("REORDER_FOLDERS_BY_BOARD error:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
-const UPDATE_FOLDER_BY_ID = async (req, res) => {
-  try {
-    const { folderId } = req.params;
-
-    const folder = await FolderModel.findOne({ id: folderId });
-
-    if (!folder) {
-      return res.status(404).json({ message: "Folder not found" });
-    }
-
-    if (folder.isDefault) {
-      return res.status(400).json({
-        message: "Default folder title cannot be changed",
-      });
-    }
-
-    const board = await BoardModel.findOne({
-      id: folder.boardId,
-      ownerId: req.userId,
-    });
-
-    if (!board) {
-      return res.status(404).json({ message: "Folder not found" });
-    }
-
-    const updatedFolder = await FolderModel.findOneAndUpdate(
-      { id: folderId },
-      { $set: req.body },
-      { returnDocument: "after", runValidators: true },
-    );
-
-    return res.status(200).json({
-      message: "Folder updated successfully",
-      folder: updatedFolder,
-    });
-  } catch (error) {
-    console.error("UPDATE_FOLDER_BY_ID error:", error);
-    return res.status(500).json({ message: "Server error" });
-  }
-};
-
-
-const DELETE_FOLDER_BY_ID = async (req, res) => {
-  try {
-    const { folderId } = req.params;
-
-    const folder = await FolderModel.findOne({ id: folderId });
-    if (!folder) {
-      return res.status(404).json({ message: "Folder not found" });
-    }
-
-    if (folder.isDefault) {
-      return res
-        .status(400)
-        .json({ message: "Default folder cannot be deleted" });
-    }
-
-    const board = await BoardModel.findOne({
-      id: folder.boardId,
-      ownerId: req.userId,
-    });
-
-    if (!board) {
-      return res.status(404).json({ message: "Folder not found" });
-    }
-
-    const images = await ImageModel.find({
-      folderId,
-      boardId: board.id,
-    }).sort({ order: 1, createdAt: 1 });
-
-    if (images.length > 0) {
-      const lastImage = await ImageModel.findOne({
-        boardId: board.id,
-        folderId: board.defaultFolderId,
-      }).sort({ order: -1 });
-
-      const nextOrder = lastImage ? lastImage.order + 1 : 0;
-
-      const bulkUpdates = images.map((image, index) => ({
-        updateOne: {
-          filter: { id: image.id, boardId: board.id },
-          update: {
-            $set: {
-              folderId: board.defaultFolderId,
-              order: nextOrder + index,
-            },
-          },
-        },
-      }));
-
-      await ImageModel.bulkWrite(bulkUpdates);
-    }
-
-    await FolderModel.deleteOne({ id: folderId });
-
-    return res.status(200).json({
-      message: "Folder was deleted",
-    });
-  } catch (error) {
-    console.error("DELETE_FOLDER_BY_ID error:", error);
     return res.status(500).json({ message: "Server error" });
   }
 };
