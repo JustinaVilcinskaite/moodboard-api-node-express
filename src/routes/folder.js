@@ -42,6 +42,7 @@ router.patch(
   validateBody(updateFolderSchema),
   UPDATE_FOLDER_BY_ID,
 );
+
 router.delete(
   "/folders/:folderId",
   authUser,
@@ -49,6 +50,7 @@ router.delete(
   DELETE_FOLDER_BY_ID,
 );
 
+// Folder reordering is implemented in the backend but not yet used in the frontend.
 router.patch(
   "/boards/:boardId/folders/reorder",
   authUser,
@@ -58,3 +60,4 @@ router.patch(
 );
 
 export default router;
+

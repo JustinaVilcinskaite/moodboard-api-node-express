@@ -180,6 +180,7 @@ const DELETE_FOLDER_BY_ID = async (req, res) => {
   }
 };
 
+// Folder reordering is implemented in the backend but not yet used in the frontend.
 const REORDER_FOLDERS_BY_BOARD = async (req, res) => {
   try {
     const { boardId } = req.params;

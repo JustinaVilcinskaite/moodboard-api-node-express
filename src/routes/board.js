@@ -45,3 +45,4 @@ router.delete(
 router.get("/public/boards", GET_ALL_PUBLIC_BOARDS);
 
 export default router;
+

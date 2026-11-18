@@ -15,7 +15,7 @@ import {
 
 const router = express.Router();
 
-// Shared routes for owner and public folder access
+// Shared routes for owner and public image access
 router.get(
   "/boards/:boardId/images",
   optionalAuth,
@@ -23,17 +23,6 @@ router.get(
   GET_IMAGES_BY_BOARD,
 );
 
-
-// Currently unused in the frontend; image details use already fetched board images.
-// TODO: Revisit whether this endpoint is needed later.
-router.get(
-  "/images/:imageId",
-  optionalAuth,
-  validateParams(imageIdParamSchema),
-  GET_IMAGE_BY_ID,
-);
-
-// 
 
 // Phase 1: images are created via URL only (no file upload yet)
 router.post(
@@ -51,12 +40,26 @@ router.patch(
   validateBody(updateImageSchema),
   UPDATE_IMAGE_BY_ID,
 );
+
 router.delete(
   "/images/:imageId",
   authUser,
   validateParams(imageIdParamSchema),
   DELETE_IMAGE_BY_ID,
 );
+
+
+
+// Currently unused in the frontend; image details use already fetched board images.
+// TODO: Revisit whether this endpoint is needed later.
+router.get(
+  "/images/:imageId",
+  optionalAuth,
+  validateParams(imageIdParamSchema),
+  GET_IMAGE_BY_ID,
+);
+
+
 
 // FUTURE FEATURES
 // Upload images (instead of URL-based)
@@ -66,3 +69,5 @@ router.delete(
 // router.post("/boards/:boardId/images/reorder", authUser, REORDER_IMAGES);
 
 export default router;
+
+

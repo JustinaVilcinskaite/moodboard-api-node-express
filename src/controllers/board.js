@@ -4,14 +4,12 @@ import FolderModel from "../models/folder.js";
 import ImageModel from "../models/image.js";
 
 // TODO: Later refactor to Aggregation-based summary query
-
 const GET_MY_BOARDS = async (req, res) => {
   try {
     const boards = await BoardModel.find({ ownerId: req.userId }).sort({
       updatedAt: -1,
     });
 
-    // ?
     const boardsWithSummary = await Promise.all(
       boards.map(async (board) => {
         const images = await ImageModel.find({ boardId: board.id }).sort({
@@ -176,7 +174,6 @@ const GET_ALL_PUBLIC_BOARDS = async (req, res) => {
         createdAt: -1,
       });
 
-    // ?
     const publicBoardsWithThumbnail = await Promise.all(
       boards.map(async (board) => {
         const firstImage = await ImageModel.findOne({ boardId: board.id }).sort(

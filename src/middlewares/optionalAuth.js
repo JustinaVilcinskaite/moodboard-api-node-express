@@ -20,3 +20,4 @@ const optionalAuth = (req, res, next) => {
 };
 
 export default optionalAuth;
+

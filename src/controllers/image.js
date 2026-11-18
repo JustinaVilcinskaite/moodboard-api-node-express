@@ -5,9 +5,10 @@ import { updateBoardActivity } from "../utils/updateBoardActivity.js";
 
 // Returns all images for the board.
 // Frontend filters images by folderId for the Folders view.
-// Overview will use the same images without folder filtering.
+// Future Overview can reuse these images without folder filtering.
 // TODO: Consider adding an optional ?folderId= query parameter
 // for backend filtering if needed for folder-specific requests or pagination.
+
 const GET_IMAGES_BY_BOARD = async (req, res) => {
   try {
     const { boardId } = req.params;
@@ -200,9 +201,8 @@ const UPDATE_IMAGE_BY_ID = async (req, res) => {
     });
   }
 };
-
-// TODO: Later, when image reorder/move is implemented,
-// review whether order values should be reindexed after delete.
+// TODO: When implementing drag-and-drop image movement and reordering,
+// review whether order values should be reindexed after deleting or moving images.
 
 const DELETE_IMAGE_BY_ID = async (req, res) => {
   try {

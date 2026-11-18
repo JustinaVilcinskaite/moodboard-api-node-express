@@ -33,3 +33,4 @@ const imageSchema = mongoose.Schema(
 imageSchema.index({ boardId: 1, folderId: 1, order: 1 });
 
 export default mongoose.model("Image", imageSchema);
+
