@@ -1,16 +1,12 @@
 # Moodboard App – Backend
 
-A REST API built with Node.js, Express, and MongoDB for an in-progress full-stack visual research workspace.
+A REST API built with Node.js, Express, and MongoDB for a full-stack visual research workspace.
 
 Moodboard is designed as one focused place for artists, designers, and other visually oriented users to collect image references, organize them into project boards and folders, and move from scattered inspiration toward a clearer creative direction.
 
-## Current Status
+The API supports JWT-based authentication, ownership checks, and read-only access to public boards and their content. It also manages folders and URL-based image references, including moving images between folders. Joi is used for request validation.
 
-The project is currently in active development.
-
-The backend foundation is substantially implemented, including authentication, ownership-protected board/folder/image logic, public and private board access, default folder behavior, folder reordering, URL-based image references for the current implementation phase, image notes/tags, and Joi validation.
-
-The API is built to work with a dedicated React/Next.js frontend that is being developed in stages.
+The API is built to work with a separate React/Next.js frontend.
 
 ## Tech Stack
 
@@ -27,13 +23,13 @@ The API is built to work with a dedicated React/Next.js frontend that is being d
 - ESLint
 - Nodemon
 
-## Implemented Backend Features
+## Features
 
 ### Authentication
 
 - User registration and login with hashed passwords using `bcryptjs`
 - JWT-based authentication middleware for protected API routes
-- Current-user endpoint for validating the logged-in user
+- Current-user endpoint for retrieving the authenticated user's profile
 
 ### Boards
 
@@ -41,7 +37,7 @@ The API is built to work with a dedicated React/Next.js frontend that is being d
 - Boards support public/private visibility, with public boards available through read-only routes
 - Creating a board automatically creates a default `General` folder
 - Deleting a board also deletes its related folders and images
-- Board list responses include summary data such as thumbnail URL and image count
+- Board listings include thumbnails; the owner's boards also include image counts and are sorted by recent activity
 
 ### Folders
 
@@ -52,27 +48,25 @@ The API is built to work with a dedicated React/Next.js frontend that is being d
 
 ### Images
 
-- Authenticated users can create URL-based image references for the current implementation phase
+- Authenticated users can create URL-based image references
 - Images are assigned to folders, or added to the board’s default folder if no folder is provided
 - Images can include notes and tags
-- Users can view, update, and delete only images from boards they own
-- Public image routes return images only when the related board is public
+- Owners can update images, move them between folders, and delete them
+- Images can be viewed by their owner or anyone when the related board is public
 
 ### Validation, Access Control & Structure
 
 - Joi validation for key request bodies and route parameters
 - Ownership checks are enforced for protected board, folder, and image actions
+- Optional authentication supports read-only access to public boards and their content
 - Modular structure with separate controllers, routes, models, schemas, middleware, and utilities
 - Environment-based configuration using `.env` variables
 
-## Planned Backend Improvements
+## Future Improvements
 
-- Add real image file upload support with an external image storage service
-- Add image reordering
-- Support moving images between folders
+- Add image file uploads with an external image storage service
+- Add image reordering within and between folders
 - Add search and filtering functionality
-- Prepare and deploy the API for production use
-- Longer-term plans include board collaboration, private board invitations, personal favorites, and color-based organization
 
 ## Project Structure
 
@@ -140,8 +134,8 @@ Example endpoint:
 http://localhost:3002/api/users/login
 ```
 
-### Related Repository
+## Related Repository
 
-This backend is built to work with a separate React/Next.js frontend, which is currently being developed:
+This backend is built to work with a separate React/Next.js frontend:
 
 [moodboard-app-react-next-ts](https://github.com/JustinaVilcinskaite/moodboard-app-react-next-ts)
